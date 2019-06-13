@@ -1,5 +1,3 @@
 #!/usr/bin/env python
-
-import msgpack
-import httplib
-import metasploit
+from clientConnect import ConnectClient
+from metasploit.msfrpc import MsfRpcClient

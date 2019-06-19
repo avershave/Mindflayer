@@ -14,7 +14,7 @@
 + Metasploit creates its own database!
 + You are able to use this database to create a specific database
 
-##LOOK INTO
+## LOOK INTO
 + Learning Metasploit from front to back
 + Metasploit RPCClient and MetasploitConsole need tob oth be open in order to execute?
 + Can Metasploit find vulnerabilities? Are they able to be parsed?

@@ -7,6 +7,7 @@ try:
     import sys
     import socket
     from ssl import SSLError
+    from threading import Timer, Lock
 except ImportError as msg:
     print ("[-] Library not installed: " + str(msg))
     print ("[*] Try installing it with: pip install " + str(msg.message))
@@ -25,6 +26,7 @@ except ImportError:
 
 try:
     from metasploit.msfrpc import MsfRpcError, MsfRpcClient
+    from metasploit.msfconsole import MsfRpcConsole
     from connectMsfRpcClient import connectMsfRpcClient
 except ImportError as msg:
     print ("[-] Missing library pymetasploit")
@@ -94,9 +96,13 @@ class pyRon:
         # Connect to msfrpcd
         if self.msfclient.connect() is False:
             sys.exit()
-        
 
-    
+        self.sessions = self.msfclient.client.sessions.list
+        for s_id, s_info in self.sessions.items():
+            print("\nSession ID: ", s_id)
+            
+            for key in s_info:
+                print(key + ':', s_info[key])
 
 # Execute Main
 try:

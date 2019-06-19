@@ -6,6 +6,7 @@
     - createMsfRpcClient.py creates the client ** THIS WAS CHANGED AND PUT INTO MAIN!
     - **This was achieved and you are able to communicate with metasploit's client.**
 + Track open sessions
+    - **Currently able to find an open session in Metasploit and it.**
 + Find the vulnerabilities of the open sessions
     - These are dumped into a list which is dumped into a database
     - Could create an object in order to accomplish this?

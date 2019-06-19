@@ -97,6 +97,8 @@ class pyRon:
         if self.msfclient.connect() is False:
             sys.exit()
 
+        # Only works if you load msgrpc with the correct parameters
+        # Params: Pass=password, Port=55553
         self.sessions = self.msfclient.client.sessions.list
         for s_id, s_info in self.sessions.items():
             print("\nSession ID: ", s_id)

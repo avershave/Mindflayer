@@ -10,9 +10,6 @@ import socket
 #
 class connectMsfRpcClient:
 
-    # Objects
-    client = None
-
     def __init__(self, username, password, port, host, ssl):
         self.username = username
         self.password = password

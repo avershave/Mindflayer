@@ -4,7 +4,7 @@
 + Connect to MetasploitRPCClient
     - connectMsfRpcClient.py handles the connection to the client
     - createMsfRpcClient.py creates the client ** THIS WAS CHANGED AND PUT INTO MAIN!
-    - <span style="color:blue">This was achieved and you are able to communicate with metasploit's client.</span>
+    - **This was achieved and you are able to communicate with metasploit's client.**
 + Track open sessions
 + Find the vulnerabilities of the open sessions
     - These are dumped into a list which is dumped into a database

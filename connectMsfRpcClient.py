@@ -36,3 +36,6 @@ class connectMsfRpcClient:
         except MsfRpcError:
             print "[-] Login failed. Wrong username or password"
             return False
+        self.console = self.client.consoles.console()
+        self.console_id = self.console.cid
+        print "[*] Console ID: " + self.console_id

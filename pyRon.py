@@ -85,32 +85,75 @@ class pyRon:
         
         self.mainMenu()
 
+    def epMenu(self, *args):
+        '''
+        Checking for required exploit and payload values.
+        The user can provide required and edit any other run values.
+        '''
+        choice = args[0]
+        runOptions = choice.runoptions
+        if not choice.missing_required:
+            print("[!]No required options!")
+        else:
+            print("[+]Printing required options...")
+            print("[!]Please fill out required options...")
+            while choice.missing_required:
+                try:
+                    for r in choice.missing_required:
+                        c = input(r+": ")
+                        choice[r] = c
+                except ValueError as msg:
+                    print("Value error: " + str(msg))
+                    continue
+
+        g = False
+        print("[+]Printing run options...")
+        for options, values in runOptions.items():
+            print(options, ":", values)
+        uc = input("Do you want to change these values? y/n: ").upper()
+        while g == False:
+            if uc == 'N':
+                return True
+            elif uc == "Y":
+                sg = False
+                while sg == False:
+                    c = input("Which option would you like to change: ")
+                    # _isTrue = c in runOptions REMOVE IF IF STATEMENT WORKS
+                    if c in runOptions:
+                        cv = input("Please enter new value: ")
+                        if type(runOptions[c]) == bool:
+                            cv = bool(cv)
+                        if type(runOptions[c]) == (int, float):
+                            cv = int(cv)
+                        runOptions[c] = cv
+                        for options, values in runOptions.items():
+                            print(options, ":", values)
+                    uc = input("Do you want to change another value: ").upper()
+                    if uc == 'N':
+                        return True
+                    else:
+                        return False
+                
+
+
     def execteSimpleExploit(self):
         # Testing sending commands to console to run
         # THIS WORKS FOR EXPLOITS but needs EXE to run
-        print ("USING EXPLOIT")
-        exploit = input("Please enter exploit: ")
-        self.msfclient.console.write('use ' + exploit)
-        time.sleep(2)
-        print ("SET PAYLOAD")
-        payload = input("Please enter payload: ")
-        self.msfclient.console.write('set payload ' + payload)
-        time.sleep(2)
-        print("SET LHOST")
-        host = str(input("Please enter LHOST: "))
-        self.msfclient.console.write('set LHOST ' + host)
-        time.sleep(2)
-        print("SET LPORT")
-        port = str(input("Please enter LPORT: "))
-        self.msfclient.console.write('set LPORT ' + port)
-        time.sleep(2)
-        print("SET THREAD")
-        thread = str(input("Please enter number of threads: "))
-        self.msfclient.console.write('set THREADS ' + thread)
-        time.sleep(2)
-        print("RUNNING")
-        self.msfclient.console.write('run')
+        print ("[+]Using Exploit...")
+        exploit = input("[!]Please enter exploit: ")
+        exploit = self.msfclient.client.modules.use('exploit', exploit)
+        self.epMenu(exploit)
+        print ("[+]Setting payload...")
+        payload = input("[!]Please enter payload: ")
+        payload = self.msfclient.client.modules.use('payload', payload)
+        self.epMenu(payload)
+        print("[+]Executing exploit...")
+        exploit.execute(payload=payload)
         time.sleep(10)
+        sessions = self.msfclient.client.sessions.list
+        if not sessions:
+            print('[!]No sessions connected directly after!')
+            print('[!]Please select option two in main menu to print connected sessions.')
     
     def printSessions(self):
         # Only works if you load msgrpc with the correct parameters using the framework
@@ -124,8 +167,8 @@ class pyRon:
     def mainMenu(self):
         '''MainMenu'''
         menuGoing = False
-        print("[+] Console Running and Connected!\n")
-        print("[!] Entering Main Menu\n")
+        print("[+]Console Running and Connected!")
+        print("\n[!]Entering Main Menu")
         while menuGoing == False:
             print("\n[***]Main Menu[***]\n")
             print("1.) Start Exploit and Payload")
@@ -138,6 +181,7 @@ class pyRon:
                 self.printSessions()
             if selection == 0:
                 print("[!!] Exiting...")
+                self.msfclient.console.write('sessions -K')
                 self.msfclient.console.destroy()
                 return True
 

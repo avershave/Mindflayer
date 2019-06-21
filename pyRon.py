@@ -156,8 +156,6 @@ class pyRon:
             print('[!]Please select option two in main menu to print connected sessions.')
     
     def printSessions(self):
-        # Only works if you load msgrpc with the correct parameters using the framework
-        # Params: Pass=password, default port is 55552
         self.sessions = self.msfclient.client.sessions.list
         for s_id, s_info in self.sessions.items():
             print("\nSession ID: ", s_id)  
@@ -181,8 +179,10 @@ class pyRon:
                 self.printSessions()
             if selection == 0:
                 print("[!!] Exiting...")
-                self.msfclient.console.write('sessions -K')
-                self.msfclient.console.destroy()
+                killall = input("[+]Kill all sessions? y/n: ").upper()
+                if killall == 'Y':
+                    self.msfclient.console.write('sessions -K')
+                self.msfclient.console.destroy('1')
                 return True
 
 # Execute Main

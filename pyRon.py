@@ -14,7 +14,9 @@ try:
     from pymetasploit3.msfrpc import MsfRpcError, MsfRpcClient
     from pymetasploit3.msfconsole import MsfRpcConsole
     from connectMsfRpcClient import connectMsfRpcClient
+    from sessionMod import sessionMod
 except ImportError as msg:
+    print(msg)
     print ("[-] Missing library pymetasploit")
     print ("[*] Please clone from \"git clone https://github.com/allfro/pymetasploit.git pymetasploit\"")
     print ("[*] \"cd pymetasploit && sudo python setup.py install\"")
@@ -29,15 +31,21 @@ class pyRon:
     msfclient = None
 
     def __init__(self):
+        '''
+        Init for pyRon.
+        Sets up the client and session module.
+        Enter for defaults.
+        Puts you into mainMenu.
+        '''
         # Adding Customization OR using defaults       
         try:
             useDefaults = input("[DEFAULTS] Would you like to use the all defaults? y/n: ").upper()
             if useDefaults == 'Y':
                 self.username = 'msf'
-                self.password = 'msf'
+                self.password = 'password'
                 self.port = 55553
                 self.host = "127.0.0.1"
-                self.ssl = True
+                self.ssl = False
             elif useDefaults == 'N':
                 print ('Press enter for individual defaults')
                 self.username = input('[Set Username] Please enter the username: ')
@@ -82,13 +90,14 @@ class pyRon:
         # Connect to msfrpcd
         if self.msfclient.connect() is False:
             sys.exit()
-        
+        self.sessionMod = sessionMod(self.msfclient)
         self.mainMenu()
 
     def epMenu(self, *args):
         '''
         Checking for required exploit and payload values.
         The user can provide required and edit any other run values.
+        Can't run more than two arguments!!!
         '''
         choice = args[0]
         runOptions = choice.runoptions
@@ -132,13 +141,18 @@ class pyRon:
                     if uc == 'N':
                         return True
                     else:
+                        for options, values in runOptions.items():
+                            print(options, ":", values)
                         return False
                 
 
 
     def execteSimpleExploit(self):
-        # Testing sending commands to console to run
-        # THIS WORKS FOR EXPLOITS but needs EXE to run
+        '''
+        User inputting exploit and payload
+
+        TODO: Change so that the input will loop if wrong input
+        '''
         print ("[+]Using Exploit...")
         exploit = input("[!]Please enter exploit: ")
         exploit = self.msfclient.client.modules.use('exploit', exploit)
@@ -156,33 +170,37 @@ class pyRon:
             print('[!]Please select option two in main menu to print connected sessions.')
     
     def printSessions(self):
-        self.sessions = self.msfclient.client.sessions.list
-        for s_id, s_info in self.sessions.items():
-            print("\nSession ID: ", s_id)  
-            for key in s_info:
-                print(key + ':', s_info[key])
+        sessions = self.msfclient.client.sessions.list
+        for s_id, s_info in sessions.items():
+            print("\nSession ID: ", s_id)
+            for info in s_info:
+                print(info + ':', s_info[info])
 
     def mainMenu(self):
-        '''MainMenu'''
+        '''
+        MainMenu
+        Option 1 will walk through exploit execution
+        Option 2 will start session module
+        '''
         menuGoing = False
         print("[+]Console Running and Connected!")
         print("\n[!]Entering Main Menu")
         while menuGoing == False:
-            print("\n[***]Main Menu[***]\n")
+            print("\n[***]Main[***]\n")
             print("1.) Start Exploit and Payload")
-            print("2.) Print Current Session")
+            print("2.) Enter Session Module")
             print("press 0 to exit...")
             selection = int(input("[!] Please select an option: "))
             if selection == 1:
                 self.execteSimpleExploit()
             if selection == 2:
-                self.printSessions()
+                self.sessionMod.sessionMenu()
             if selection == 0:
                 print("[!!] Exiting...")
                 killall = input("[+]Kill all sessions? y/n: ").upper()
                 if killall == 'Y':
-                    self.msfclient.console.write('sessions -K')
-                self.msfclient.console.destroy('1')
+                    self.msfclient.client.consoles.console(self.msfclient.console).write('sessions -K')
+                self.msfclient.client.consoles.destroy(self.msfclient.console)
                 return True
 
 # Execute Main

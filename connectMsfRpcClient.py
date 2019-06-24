@@ -10,6 +10,8 @@ import socket
 #
 class connectMsfRpcClient:
 
+    client = None
+
     def __init__(self, username, password, port, host, ssl):
         self.username = username
         self.password = password
@@ -37,3 +39,4 @@ class connectMsfRpcClient:
             print ("[-] Login failed. Wrong username or password")
             return False
         self.console = self.client.consoles.console().cid
+        print(f"[+]Console ID: {self.console}")

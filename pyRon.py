@@ -168,13 +168,6 @@ class pyRon:
         if not sessions:
             print('[!]No sessions connected directly after!')
             print('[!]Please select option two in main menu to print connected sessions.')
-    
-    def printSessions(self):
-        sessions = self.msfclient.client.sessions.list
-        for s_id, s_info in sessions.items():
-            print("\nSession ID: ", s_id)
-            for info in s_info:
-                print(info + ':', s_info[info])
 
     def mainMenu(self):
         '''

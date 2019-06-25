@@ -4,13 +4,14 @@
 
 import json
 import random
+import time
 
 class sessionMod:
 
-    commands = ['ipconfig', 'uuid']
+    commands = ['ipconfig', 'whoami']
 
-    def __init__(self, client):
-        self.client = client
+    def __init__(self, msfclient):
+        self.msfclient = msfclient
         self.dumpSession()
     
     def dumpSession(self):
@@ -18,7 +19,7 @@ class sessionMod:
         Dump current session into a json file
         '''
         with open('sessionJSON.json', 'w') as fp:
-            json.dump(self.client.client.sessions.list, fp, indent=4)
+            json.dump(self.msfclient.client.sessions.list, fp, indent=4)
     
     def retrieveSession(self):
         '''
@@ -53,12 +54,15 @@ class sessionMod:
             print("\n[***]Session Module[***]\n")
             print("1.) Print Current Sessions")
             print("2.) Send Command to Session")
+            print("3.) Start active session controller")
             print("press 0 to exit...")
             selection = int(input("[!] Please select an option: "))
             if selection == 1:
                 self.sessionPrint()
             if selection == 2:
                 self.sessionSendCommand()
+            if selection == 3:
+                self.activeSessionController()
             if selection == 0:
                 return True
     
@@ -79,4 +83,35 @@ class sessionMod:
             print(f"[+]Session {avail} ready!")
         sessionInput = input("[!]Which session: ")
         print(f'[+]Selected session {sessionInput}')
-        print(self.client.client.sessions.session(sessionInput).run_psh_cmd(random.choice(self.commands)))
+        print(self.msfclient.client.sessions.session(sessionInput).run_psh_cmd(random.choice(self.commands)))
+
+    def activeSessionController(self):
+        '''
+        Loops through sending commands to random sessions that are available through dumping and reading the json file.
+        @TODO:
+        Adding a way to better handle dying connections.
+        '''
+        try:
+            g = True
+            while g == True:
+                sessionList = []
+                self.dumpSession()
+                dumpedSesssion = self.retrieveSession()
+                for s_id in dumpedSesssion:
+                    sessionList.append(s_id)
+                if not sessionList:
+                    print("\n[!]No sessions. Exiting controller...\n")
+                    return False
+                for avail in sessionList:
+                    print(f"[+]Session {avail} ready!")
+                selectedSession = random.choice(sessionList)
+                print(f'[+]Selected session {selectedSession}')
+                print(self.msfclient.client.sessions.session(selectedSession).run_psh_cmd(random.choice(self.commands)))
+                time.sleep(4)
+        except KeyboardInterrupt:
+            exit = input("[+]Would you like to exit y/n: ").upper()
+            if exit == 'Y':
+                return False
+            elif exit == 'N':
+                return True
+

@@ -119,17 +119,17 @@ class pyRon:
         print("[+]Printing run options...")
         for options, values in runOptions.items():
             print(options, ":", values)
-        uc = input("Do you want to change these values? y/n: ").upper()
+        uc = input("[!]Do you want to change these values? y/n: ").upper()
         while g == False:
             if uc == 'N':
                 return True
             elif uc == "Y":
                 sg = False
                 while sg == False:
-                    c = input("Which option would you like to change: ")
+                    c = input("[!]Which option would you like to change: ")
                     # _isTrue = c in runOptions REMOVE IF IF STATEMENT WORKS
                     if c in runOptions:
-                        cv = input("Please enter new value: ")
+                        cv = input("[!]Please enter new value: ")
                         if type(runOptions[c]) == bool:
                             cv = bool(cv)
                         if type(runOptions[c]) == (int, float):
@@ -137,13 +137,14 @@ class pyRon:
                         runOptions[c] = cv
                         for options, values in runOptions.items():
                             print(options, ":", values)
-                    uc = input("Do you want to change another value: ").upper()
+                    if c == '':
+                        uc = input("[!]Done changing values y/n:")
+                    uc = input("[!]Do you want to change another value y/n: ").upper()
                     if uc == 'N':
                         return True
                     else:
                         for options, values in runOptions.items():
                             print(options, ":", values)
-                        return False
                 
 
 

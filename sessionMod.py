@@ -88,7 +88,7 @@ class sessionMod:
     def activeSessionController(self):
         '''
         Loops through sending commands to random sessions that are available through dumping and reading the json file.
-        @TODO:
+        TODO:
         Adding a way to better handle dying connections.
         '''
         try:

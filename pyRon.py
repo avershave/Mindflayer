@@ -15,11 +15,12 @@ try:
     from pymetasploit3.msfconsole import MsfRpcConsole
     from connectMsfRpcClient import connectMsfRpcClient
     from sessionMod import sessionMod
+    from msfrpcdHandler import msfrpcdHandler
 except ImportError as msg:
     print(msg)
     print ("[-] Missing library pymetasploit")
-    print ("[*] Please clone from \"git clone https://github.com/allfro/pymetasploit.git pymetasploit\"")
-    print ("[*] \"cd pymetasploit && sudo python setup.py install\"")
+    print ("[*] Please clone from \"git clone https://github.com/DanMcInerney/pymetasploit3.git\"")
+    print ("[*] \"cd pymetasploit3 && sudo python setup.py install\"")
     sys.exit()
 
 class pyRon:
@@ -36,50 +37,55 @@ class pyRon:
         Sets up the client and session module.
         Enter for defaults.
         Puts you into mainMenu.
+        Automation added to make the setup straight forward.
         '''
-        # Adding Customization OR using defaults       
+        # Adding Customization OR using defaults
         try:
-            useDefaults = input("[DEFAULTS] Would you like to use the all defaults? y/n: ").upper()
-            if useDefaults == 'Y':
-                self.username = 'msf'
-                self.password = 'password'
-                self.port = 55553
-                self.host = "127.0.0.1"
-                self.ssl = False
-            elif useDefaults == 'N':
-                print ('Press enter for individual defaults')
-                self.username = input('[Set Username] Please enter the username: ')
-                if self.username == '':
-                    print ('[Set Username] Using default username: msf')
+            automation = input("[!]Start automation or manual y/n: ").upper()
+            if automation == 'Y':
+                pass
+            if automation == 'N':
+                useDefaults = input("[DEFAULTS] Would you like to use the all defaults? y/n: ").upper()
+                if useDefaults == 'Y':
                     self.username = 'msf'
-                self.password = input('[Set Password] Please enter the password: ')
-                if self.password == '':
-                    self.emptyPasswordChoice == input('[Set Password] Would you like to set an empty password? y/n: ').upper()
-                    if self.emptyPasswordChoice == 'Y':
-                        self.password = ''
-                    elif self.emptyPasswordChoice == 'N':
-                        print ('[Set Password] Using default password: msf')
-                        self.password = 'msf'
-                self.port = input('[Set Port] Please enter the port: ')
-                if self.port == '':
-                    print('[Set Port] Using default port: 55553')
+                    self.password = 'password'
                     self.port = 55553
-                else:
-                    self.port = int(self.port)
-                self.host = input('[Set Host] Please select the host: ')
-                if self.host == '':
-                    print ('[Set Host] Using default host: 127.0.0.1')
-                    self.host = '127.0.0.1'
-                setSSL = input('[Set SSL] Using ssl? t/F: ').upper()
-                if setSSL == '':
-                    print ('[Set SSL] Using default: True')
-                    self.ssl = True
-                elif setSSL == "T":
-                    print ('[Set SSL] Setting SSL to True')
-                    self.ssl = True
-                elif setSSL == "F":
-                    print ('[Set SSL] Setting SSL to False')
+                    self.host = "127.0.0.1"
                     self.ssl = False
+                elif useDefaults == 'N':
+                    print ('Press enter for individual defaults')
+                    self.username = input('[Set Username] Please enter the username: ')
+                    if self.username == '':
+                        print ('[Set Username] Using default username: msf')
+                        self.username = 'msf'
+                    self.password = input('[Set Password] Please enter the password: ')
+                    if self.password == '':
+                        self.emptyPasswordChoice == input('[Set Password] Would you like to set an empty password? y/n: ').upper()
+                        if self.emptyPasswordChoice == 'Y':
+                            self.password = ''
+                        elif self.emptyPasswordChoice == 'N':
+                            print ('[Set Password] Using default password: msf')
+                            self.password = 'msf'
+                    self.port = input('[Set Port] Please enter the port: ')
+                    if self.port == '':
+                        print('[Set Port] Using default port: 55553')
+                        self.port = 55553
+                    else:
+                        self.port = int(self.port)
+                    self.host = input('[Set Host] Please select the host: ')
+                    if self.host == '':
+                        print ('[Set Host] Using default host: 127.0.0.1')
+                        self.host = '127.0.0.1'
+                    setSSL = input('[Set SSL] Using ssl? t/F: ').upper()
+                    if setSSL == '':
+                        print ('[Set SSL] Using default: True')
+                        self.ssl = True
+                    elif setSSL == "T":
+                        print ('[Set SSL] Setting SSL to True')
+                        self.ssl = True
+                    elif setSSL == "F":
+                        print ('[Set SSL] Setting SSL to False')
+                        self.ssl = False
         except ValueError:
             print ('Wrong input!')
             sys.exit()
@@ -160,10 +166,10 @@ class pyRon:
         self.epMenu(exploit)
         print ("[+]Setting payload...")
         payload = input("[!]Please enter payload: ")
-        payload = self.msfclient.client.modules.use('payload', payload)
+        _payload = self.msfclient.client.modules.use('payload', payload)
         self.epMenu(payload)
         print("[+]Executing exploit...")
-        exploit.execute(payload=payload)
+        exploit.execute(payload=_payload)
         time.sleep(10)
         sessions = self.msfclient.client.sessions.list
         if not sessions:

@@ -7,7 +7,7 @@ import logging
 
 class msfrpcdHandler:
     fmtstr = "%(asctime)s: %(levelname)s: %(message)s"
-    logging.basicConfig(filename="handler.log",
+    logging.basicConfig(filename="logs/handler.log",
                     level=logging.DEBUG,
                     filemode="w",
                     format=fmtstr)

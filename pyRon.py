@@ -5,6 +5,8 @@
 try:
     import time
     import sys
+    import logging
+    import json
 except ImportError as msg:
     print ("[-] Library not installed: " + str(msg))
     print ("[*] Try installing it with: pip install " + str(msg.msg))
@@ -25,6 +27,12 @@ except ImportError as msg:
     sys.exit()
 
 class pyRon:
+    fmtstr = "%(asctime)s: %(levelname)s: %(message)s"
+    logging.basicConfig(filename="logs/main.log",
+                    level=logging.DEBUG,
+                    filemode="w",
+                    format=fmtstr)
+    
     # Conditonals
     emptyPasswordChoice = ''
     setSSL = ''
@@ -46,8 +54,10 @@ class pyRon:
         try:
             automation = input("[!]Start automation or manual y/n: ").upper()
             if automation == 'Y':
+                logging.info("Started Automation")
                 pass
             if automation == 'N':
+                logging.info("Starting client setup")
                 useDefaults = input("[DEFAULTS] Would you like to use the all defaults? y/n: ").upper()
                 if useDefaults == 'Y':
                     self.username = 'msf'
@@ -90,16 +100,20 @@ class pyRon:
                         print ('[Set SSL] Setting SSL to False')
                         self.ssl = False
         except ValueError:
+            logging.info("User put wrong info for client and program is exiting")
             print ('Wrong input!')
             sys.exit()
 
         # Objects
+        logging.info("Connecting to client with info")
         self.msfclient = connectMsfRpcClient(self.username, self.password, self.port, self.host, self.ssl)
 
         # Connect to msfrpcd
         if self.msfclient.connect() is False:
+            logging.info("Client did not connect and program is exiting")
             sys.exit()
         self.sessionMod = sessionMod(self.msfclient)
+        logging.info("Entering main menu")
         self.mainMenu()
 
     def epMenu(self, *args):
@@ -113,50 +127,56 @@ class pyRon:
         if not choice.missing_required:
             print("[!]No required options!")
         else:
+            logging.info("Entering required options")
             print("[+]Printing required options...")
             print("[!]Please fill out required options...")
             while choice.missing_required:
                 try:
                     for r in choice.missing_required:
-                        c = input(r+": ")
+                        c = input(f"[!]{r}: ")
                         choice[r] = c
                 except ValueError as msg:
+                    logging.info("Wrong value for required options")
                     print("Value error: " + str(msg))
                     continue
-
-        g = False
-        print("[+]Printing run options...")
-        for options, values in runOptions.items():
-            print(options, ":", values)
-        uc = input("[!]Do you want to change these values? y/n: ").upper()
-        while g == False:
-            if uc == 'N':
-                return True
-            elif uc == "Y":
-                sg = False
-                while sg == False:
-                    c = input("[!]Which option would you like to change: ")
-                    # _isTrue = c in runOptions REMOVE IF IF STATEMENT WORKS
-                    if c in runOptions:
-                        cv = input("[!]Please enter new value: ")
-                        if type(runOptions[c]) == bool:
-                            if cv == 'False':
-                                cv = False
-                            else:
-                                cv = True
-                        if type(runOptions[c]) == (int, float):
-                            cv = int(cv)
-                        runOptions[c] = cv
-                        for options, values in runOptions.items():
-                            print(options, ":", values)
-                    if c == '':
-                        uc = input("[!]Done changing values y/n:")
-                    uc = input("[!]Do you want to change another value y/n: ").upper()
-                    if uc == 'N':
-                        return True
-                    else:
-                        return False
-                
+        try:
+            logging.info("Entering changing options for exploit and payload")
+            g = False
+            print("[+]Printing run options...")
+            for options, values in runOptions.items():
+                print(options, ":", values)
+            uc = input("[!]Do you want to change these values? y/n: ").upper()
+            while g == False:
+                if uc == 'N':
+                    return True
+                elif uc == "Y":
+                    sg = False
+                    while sg == False:
+                        c = input("[!]Which option would you like to change: ")
+                        # _isTrue = c in runOptions REMOVE IF IF STATEMENT WORKS
+                        if c in runOptions:
+                            cv = input("[!]Please enter new value: ")
+                            if type(runOptions[c]) == bool:
+                                if cv == 'False':
+                                    cv = False
+                                else:
+                                    cv = True
+                            if type(runOptions[c]) == (int, float):
+                                cv = int(cv)
+                            runOptions[c] = cv
+                            for options, values in runOptions.items():
+                                print(options, ":", values)
+                        if c == '':
+                            uc = input("[!]Done changing values y/n:")
+                        uc = input("[!]Do you want to change another value y/n: ").upper()
+                        if uc == 'N':
+                            return True
+                        else:
+                            return False
+        except ValueError:
+            logging.info("Wrong input in exploit options and payload options. Program exiting.")
+            print("Wrong input!")
+            sys.exit()
 
 
     def execteSimpleExploit(self):
@@ -166,10 +186,12 @@ class pyRon:
         TODO: Change so that the input will loop if wrong input
         '''
         try:
+            logging.info("Entering choice for exploit")
             print ("[+]Using Exploit...")
             exploit = input("[!]Please enter exploit: ")
             exploit = self.msfclient.client.modules.use('exploit', exploit)
             self.epMenu(exploit)
+            logging.info("Entering choice for payload")
             print ("[+]Setting payload...")
             payload = input("[!]Please enter payload: ")
             _payload = self.msfclient.client.modules.use('payload', payload)
@@ -182,13 +204,39 @@ class pyRon:
                 print('[!]No sessions connected directly after!')
                 print('[!]Please select option two in main menu to print connected sessions.')
         except ValueError:
+            logging.info("Wrong value entering the exploit or payload file path")
             print ("Wrong value for exploit!")
             sys.exit()
         
     def listJobs(self):
-        current_jobs = self.msfclient.client.jobs.list
-        for k,v in current_jobs.items():
-            print(k,":",v)
+        logging.info("Printing job list")
+        try:
+            self.dumpJobs()
+            currentJobs = self.retrieveJobs()
+            for s_id, s_info in currentJobs.items():
+                print("\nJob ID: ", s_id)
+                for info in s_info:
+                    print(info + ':', s_info[info])
+        except:
+            pass
+
+    def dumpJobs(self):
+        logging.info("Dumping current jobs. I really need a better name for this.")
+        try:
+            with open('json/jobsJSON.json', 'w') as fp:
+                json.dump(self.msfclient.client.jobs.list, fp, indent=4)
+        except:
+            pass
+
+    def retrieveJobs(self):
+        logging.info("Retrieving jobs from JSON file")
+        '''
+        Retrieve session from json file
+        '''
+        json_file = open('json/jobsJSON.json', 'r')
+        json_read = json_file.read()
+        jobsFromJson = json.loads(json_read)
+        return jobsFromJson
 
     def mainMenu(self):
         '''
@@ -200,6 +248,7 @@ class pyRon:
         print("[+]Console Running and Connected!")
         print("\n[!]Entering Main Menu")
         while menuGoing == False:
+            logging.info("Entering menu choice")
             print("\n[***]Main[***]\n")
             print("1.) Start Exploit and Payload")
             print("2.) Enter Session Module")
@@ -208,17 +257,24 @@ class pyRon:
             if selection == 1:
                 self.execteSimpleExploit()
             if selection == 2:
+                logging.info("Changing over sessionMod")
                 self.sessionMod.sessionMenu()
             if selection ==3:
                 self.listJobs()
             if selection == 0:
+                logging.info("User is exiting")
                 print("[!!] Exiting...")
                 killall = input("[+]Kill all sessions? y/n: ").upper()
                 if killall == 'Y':
+                    logging.info("User killing sessions")
                     self.msfclient.client.consoles.console(self.msfclient.console).write('sessions -K')
-                killjobs = input("[+]Kill all jobs? y/n: ").upper()
-                if killjobs == 'Y':
-                    self.msfclient.client.jobs.stop('0')
+                jobs = self.retrieveJobs()    
+                if jobs:
+                    killjobs = input("[+]Kill all jobs? y/n: ").upper()
+                    if killjobs == 'Y':
+                        logging.info("User killing jobs")
+                        for k in jobs:
+                            self.msfclient.client.jobs.stop(k)
                 self.msfclient.client.consoles.destroy(self.msfclient.console)
                 return True
 

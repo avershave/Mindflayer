@@ -19,14 +19,14 @@ class sessionMod:
         '''
         Dump current session into a json file
         '''
-        with open('sessionJSON.json', 'w') as fp:
+        with open('json/sessionJSON.json', 'w') as fp:
             json.dump(self.msfclient.client.sessions.list, fp, indent=4)
     
     def retrieveSession(self):
         '''
         Retrieve session from json file
         '''
-        json_file = open('sessionJSON.json')
+        json_file = open('json/sessionJSON.json')
         json_read = json_file.read()
         sessionFromJson = json.loads(json_read)
         return sessionFromJson

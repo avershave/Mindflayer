@@ -15,7 +15,7 @@ try:
     from pymetasploit3.msfconsole import MsfRpcConsole
     from connectMsfRpcClient import connectMsfRpcClient
     from sessionMod import sessionMod
-    from msfrpcdHandler import msfrpcdHandler
+    #from msfrpcdHandler import msfrpcdHandler
 except ImportError as msg:
     print(msg)
     print ("[-] Missing library pymetasploit")
@@ -137,7 +137,10 @@ class pyRon:
                     if c in runOptions:
                         cv = input("[!]Please enter new value: ")
                         if type(runOptions[c]) == bool:
-                            cv = bool(cv)
+                            if cv == 'False':
+                                cv = False
+                            else:
+                                cv = True
                         if type(runOptions[c]) == (int, float):
                             cv = int(cv)
                         runOptions[c] = cv
@@ -149,8 +152,7 @@ class pyRon:
                     if uc == 'N':
                         return True
                     else:
-                        for options, values in runOptions.items():
-                            print(options, ":", values)
+                        return False
                 
 
 
@@ -167,7 +169,7 @@ class pyRon:
         print ("[+]Setting payload...")
         payload = input("[!]Please enter payload: ")
         _payload = self.msfclient.client.modules.use('payload', payload)
-        self.epMenu(payload)
+        self.epMenu(_payload)
         print("[+]Executing exploit...")
         exploit.execute(payload=_payload)
         time.sleep(10)
@@ -175,6 +177,11 @@ class pyRon:
         if not sessions:
             print('[!]No sessions connected directly after!')
             print('[!]Please select option two in main menu to print connected sessions.')
+    
+    def listJobs(self):
+        current_jobs = self.msfclient.client.jobs.list
+        for k,v in current_jobs.items():
+            print(k,":",v)
 
     def mainMenu(self):
         '''
@@ -195,11 +202,16 @@ class pyRon:
                 self.execteSimpleExploit()
             if selection == 2:
                 self.sessionMod.sessionMenu()
+            if selection ==3:
+                self.listJobs()
             if selection == 0:
                 print("[!!] Exiting...")
                 killall = input("[+]Kill all sessions? y/n: ").upper()
                 if killall == 'Y':
                     self.msfclient.client.consoles.console(self.msfclient.console).write('sessions -K')
+                killjobs = input("[+]Kill all jobs? y/n: ").upper()
+                if killjobs == 'Y':
+                    self.msfclient.client.jobs.stop('0')
                 self.msfclient.client.consoles.destroy(self.msfclient.console)
                 return True
 

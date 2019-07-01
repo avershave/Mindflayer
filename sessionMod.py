@@ -5,6 +5,7 @@
 import json
 import random
 import time
+from pymetasploit3.msfrpc import MsfError
 
 class sessionMod:
 
@@ -63,6 +64,8 @@ class sessionMod:
                 self.sessionSendCommand()
             if selection == 3:
                 self.activeSessionController()
+            if selection == 4:
+                pass
             if selection == 0:
                 return True
     
@@ -91,27 +94,44 @@ class sessionMod:
         TODO:
         Adding a way to better handle dying connections.
         '''
-        try:
-            g = True
-            while g == True:
+        g = True
+        while g == True:
+            try:
                 sessionList = []
                 self.dumpSession()
                 dumpedSesssion = self.retrieveSession()
                 for s_id in dumpedSesssion:
                     sessionList.append(s_id)
-                if not sessionList:
-                    print("\n[!]No sessions. Exiting controller...\n")
-                    return False
+                while not sessionList:
+                    print("\n[!]No sessions. Waiting for sessions...\n")
+                    time.sleep(5)
+                    self.dumpSession()
+                    dumpedSesssion = self.retrieveSession()
+                    for s_id in dumpedSesssion:
+                        sessionList.append(s_id)
                 for avail in sessionList:
                     print(f"[+]Session {avail} ready!")
                 selectedSession = random.choice(sessionList)
                 print(f'[+]Selected session {selectedSession}')
-                print(self.msfclient.client.sessions.session(selectedSession).run_psh_cmd(random.choice(self.commands)))
+                _output = self.msfclient.client.sessions.session(selectedSession).run_psh_cmd(random.choice(self.commands), timeout=5, timeout_exception=True)
+                check_error = _output.split(" ")
+                if check_error[0] == '[-]':
+                    print(f"[!]Session {selectedSession} threw timeout error.")
+                    print("[!]Killing session...")
+                    self.msfclient.client.consoles.console(self.msfclient.console).write(f'sessions -k {selectedSession}')
+                    time.sleep(10)
+                else:
+                    print(_output)
                 time.sleep(4)
-        except KeyboardInterrupt:
-            exit = input("[+]Would you like to exit y/n: ").upper()
-            if exit == 'Y':
-                return False
-            elif exit == 'N':
-                return True
-
+            except KeyboardInterrupt:
+                exit = input("[+]Would you like to exit y/n: ").upper()
+                if exit == 'Y':
+                    return False
+                elif exit == 'N':
+                    return True
+            except MsfError:
+                print(f"[!]Session {selectedSession} threw timeout error.")
+                print("[!]Killing session...")
+                self.msfclient.client.consoles.console(self.msfclient.console).write(f'sessions -k {selectedSession}')
+                time.sleep(10)
+                continue

@@ -15,6 +15,7 @@ try:
     from pymetasploit3.msfconsole import MsfRpcConsole
     from connectMsfRpcClient import connectMsfRpcClient
     from sessionMod import sessionMod
+    from msfrpcdHandler import msfrpcdHandler
     #from msfrpcdHandler import msfrpcdHandler
 except ImportError as msg:
     print(msg)
@@ -39,6 +40,8 @@ class pyRon:
         Puts you into mainMenu.
         Automation added to make the setup straight forward.
         '''
+        print("[!]Starting msfrpcd on local host")
+        msfrpcdHandler()
         # Adding Customization OR using defaults
         try:
             automation = input("[!]Start automation or manual y/n: ").upper()
@@ -162,22 +165,26 @@ class pyRon:
 
         TODO: Change so that the input will loop if wrong input
         '''
-        print ("[+]Using Exploit...")
-        exploit = input("[!]Please enter exploit: ")
-        exploit = self.msfclient.client.modules.use('exploit', exploit)
-        self.epMenu(exploit)
-        print ("[+]Setting payload...")
-        payload = input("[!]Please enter payload: ")
-        _payload = self.msfclient.client.modules.use('payload', payload)
-        self.epMenu(_payload)
-        print("[+]Executing exploit...")
-        exploit.execute(payload=_payload)
-        time.sleep(10)
-        sessions = self.msfclient.client.sessions.list
-        if not sessions:
-            print('[!]No sessions connected directly after!')
-            print('[!]Please select option two in main menu to print connected sessions.')
-    
+        try:
+            print ("[+]Using Exploit...")
+            exploit = input("[!]Please enter exploit: ")
+            exploit = self.msfclient.client.modules.use('exploit', exploit)
+            self.epMenu(exploit)
+            print ("[+]Setting payload...")
+            payload = input("[!]Please enter payload: ")
+            _payload = self.msfclient.client.modules.use('payload', payload)
+            self.epMenu(_payload)
+            print("[+]Executing exploit...")
+            exploit.execute(payload=_payload)
+            time.sleep(10)
+            sessions = self.msfclient.client.sessions.list
+            if not sessions:
+                print('[!]No sessions connected directly after!')
+                print('[!]Please select option two in main menu to print connected sessions.')
+        except ValueError:
+            print ("Wrong value for exploit!")
+            sys.exit()
+        
     def listJobs(self):
         current_jobs = self.msfclient.client.jobs.list
         for k,v in current_jobs.items():

@@ -23,7 +23,7 @@ class msfrpcdHandler:
         if self.checkMsfrpcd():
             print("[!]MetasploitRPCD is already running!")
         else:
-            os.system(f"gnome-terminal -e 'bash -c \"sudo msfrpcd -P 'password' -S -f -n -a 127.0.0.1; exec bash\"'")
+            os.system(f"gnome-terminal -- bash -c \"msfrpcd -P 'password' -S -f -n -a 127.0.0.1; exec bash\"")
             logging.info("Terminal Started and executed handler")
             # os.system("sudo msfrpcd -P 'password' -n -a 127.0.0.1")
             time.sleep(10)

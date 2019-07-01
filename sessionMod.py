@@ -56,6 +56,7 @@ class sessionMod:
             print("1.) Print Current Sessions")
             print("2.) Send Command to Session")
             print("3.) Start active session controller")
+            print("4.) Test Command")
             print("press 0 to exit...")
             selection = int(input("[!] Please select an option: "))
             if selection == 1:
@@ -65,7 +66,7 @@ class sessionMod:
             if selection == 3:
                 self.activeSessionController()
             if selection == 4:
-                pass
+                self.msfclient.client.sessions.session('1').run_wit_output('transport list')
             if selection == 0:
                 return True
     

@@ -4,10 +4,20 @@ import os, time, psutil, signal, sys
 import threading
 from threading import Thread
 import logging
+import pathlib
+
+_log_file = pathlib.Path("logs/handler.log")
+_log_dir = pathlib.Path("logs")
+if _log_dir.exists() == False:
+    os.mkdir("logs")
+if _log_file.exists() == False:
+    with open('logs/handler.log', 'a') as fp:
+        fp.write("CREATING NEW LOG FILE")
+        fp.close()
 
 class msfrpcdHandler:
     fmtstr = "%(asctime)s: %(levelname)s: %(message)s"
-    logging.basicConfig(filename="logs/handler.log",
+    logging.basicConfig(filename=_log_file,
                     level=logging.DEBUG,
                     filemode="w",
                     format=fmtstr)

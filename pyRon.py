@@ -2,6 +2,8 @@
 #Credit goes to Luis Hebendanz
 #https://github.com/Luis-Hebendanz/msf-remote-console
 
+
+
 try:
     import time
     import sys
@@ -9,6 +11,24 @@ try:
     import json
     import pathlib
     import os
+
+    # checking for logs dir
+    _log_file = pathlib.Path("logs/main.log")
+    _log_dir = pathlib.Path("logs")
+    if _log_dir.exists() == False:
+        os.mkdir("logs")
+    if _log_file.exists() == False:
+        with open('logs/main.log', 'a') as fp:
+            fp.write("CREATING NEW LOG FILE")
+            fp.close()
+    
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    fmtstr = logging.Formatter("%(asctime)s: %(levelname)s: %(message)s")
+    file_handler = logging.FileHandler("logs/main.log")
+    file_handler.setFormatter(fmtstr)
+    logger.addHandler(file_handler)
+
 except ImportError as msg:
     print ("[-] Library not installed: " + str(msg))
     print ("[*] Try installing it with: pip install " + str(msg.msg))
@@ -49,10 +69,10 @@ class pyRon:
         try:
             automation = input("[!]Start automation or manual y/n: ").upper()
             if automation == 'Y':
-                logging.info("Started Automation")
+                logger.info("Started Automation")
                 pass
             if automation == 'N':
-                logging.info("Starting client setup")
+                logger.info("Starting client setup")
                 useDefaults = input("[DEFAULTS] Would you like to use the all defaults? y/n: ").upper()
                 if useDefaults == 'Y':
                     self.username = 'msf'
@@ -95,20 +115,20 @@ class pyRon:
                         print ('[Set SSL] Setting SSL to False')
                         self.ssl = False
         except ValueError:
-            logging.info("User put wrong info for client and program is exiting")
+            logger.info("User put wrong info for client and program is exiting")
             print ('Wrong input!')
             sys.exit()
 
         # Objects
-        logging.info("Connecting to client with info")
+        logger.info("Connecting to client with info")
         self.msfclient = connectMsfRpcClient(self.username, self.password, self.port, self.host, self.ssl)
 
         # Connect to msfrpcd
         if self.msfclient.connect() is False:
-            logging.info("Client did not connect and program is exiting")
+            logger.info("Client did not connect and program is exiting")
             sys.exit()
         self.sessionMod = sessionMod(self.msfclient)
-        logging.info("Entering main menu")
+        logger.info("Entering main menu")
         self.mainMenu()
 
     def epMenu(self, *args):
@@ -122,7 +142,7 @@ class pyRon:
         if not choice.missing_required:
             print("[!]No required options!")
         else:
-            logging.info("Entering required options")
+            logger.info("Entering required options")
             print("[+]Printing required options...")
             print("[!]Please fill out required options...")
             while choice.missing_required:
@@ -131,11 +151,11 @@ class pyRon:
                         c = input(f"[!]{r}: ")
                         choice[r] = c
                 except ValueError as msg:
-                    logging.info("Wrong value for required options")
+                    logger.info("Wrong value for required options")
                     print("Value error: " + str(msg))
                     continue
         try:
-            logging.info("Entering changing options for exploit and payload")
+            logger.info("Entering changing options for exploit and payload")
             g = False
             print("[+]Printing run options...")
             for options, values in runOptions.items():
@@ -169,7 +189,7 @@ class pyRon:
                         else:
                             return False
         except ValueError:
-            logging.info("Wrong input in exploit options and payload options. Program exiting.")
+            logger.info("Wrong input in exploit options and payload options. Program exiting.")
             print("Wrong input!")
             sys.exit()
 
@@ -181,12 +201,12 @@ class pyRon:
         TODO: Change so that the input will loop if wrong input
         '''
         try:
-            logging.info("Entering choice for exploit")
+            logger.info("Entering choice for exploit")
             print ("[+]Using Exploit...")
             exploit = input("[!]Please enter exploit: ")
             exploit = self.msfclient.client.modules.use('exploit', exploit)
             self.epMenu(exploit)
-            logging.info("Entering choice for payload")
+            logger.info("Entering choice for payload")
             print ("[+]Setting payload...")
             payload = input("[!]Please enter payload: ")
             _payload = self.msfclient.client.modules.use('payload', payload)
@@ -204,7 +224,7 @@ class pyRon:
             sys.exit()
         
     def listJobs(self):
-        logging.info("Printing job list")
+        logger.info("Printing job list")
         try:
             self.dumpJobs()
             currentJobs = self.retrieveJobs()
@@ -216,7 +236,7 @@ class pyRon:
             pass
 
     def dumpJobs(self):
-        logging.info("Dumping current jobs. I really need a better name for this.")
+        logger.info("Dumping current jobs. I really need a better name for this.")
         try:
             with open('json/jobsJSON.json', 'w') as fp:
                 json.dump(self.msfclient.client.jobs.list, fp, indent=4)
@@ -224,7 +244,7 @@ class pyRon:
             pass
 
     def retrieveJobs(self):
-        logging.info("Retrieving jobs from JSON file")
+        logger.info("Retrieving jobs from JSON file")
         '''
         Retrieve session from json file
         '''
@@ -243,7 +263,7 @@ class pyRon:
         print("[+]Console Running and Connected!")
         print("\n[!]Entering Main Menu")
         while menuGoing == False:
-            logging.info("Entering menu choice")
+            logger.info("Entering menu choice")
             print("\n[***]Main[***]\n")
             print("1.) Start Exploit and Payload")
             print("2.) Enter Session Module")
@@ -257,17 +277,17 @@ class pyRon:
             if selection ==3:
                 self.listJobs()
             if selection == 0:
-                logging.info("User is exiting")
+                logger.info("User is exiting")
                 print("[!!] Exiting...")
                 killall = input("[+]Kill all sessions? y/n: ").upper()
                 if killall == 'Y':
-                    logging.info("User killing sessions")
+                    logger.info("User killing sessions")
                     self.msfclient.client.consoles.console(self.msfclient.console).write('sessions -K')
                 jobs = self.retrieveJobs()    
                 if jobs:
                     killjobs = input("[+]Kill all jobs? y/n: ").upper()
                     if killjobs == 'Y':
-                        logging.info("User killing jobs")
+                        logger.info("User killing jobs")
                         for k in jobs:
                             self.msfclient.client.jobs.stop(k)
                 self.msfclient.client.consoles.destroy(self.msfclient.console)

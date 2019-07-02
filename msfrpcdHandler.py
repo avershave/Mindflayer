@@ -14,13 +14,15 @@ if _log_file.exists() == False:
     with open('logs/handler.log', 'a') as fp:
         fp.write("CREATING NEW LOG FILE")
         fp.close()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+fmtstr = logging.Formatter("%(asctime)s: %(levelname)s: %(message)s")
+file_handler = logging.FileHandler("logs/handler.log")
+file_handler.setFormatter(fmtstr)
+logger.addHandler(file_handler)
+logger.propagate = False
 
 class msfrpcdHandler:
-    fmtstr = "%(asctime)s: %(levelname)s: %(message)s"
-    logging.basicConfig(filename=_log_file,
-                    level=logging.DEBUG,
-                    filemode="w",
-                    format=fmtstr)
     
     def __init__(self):
         self.msfrpcdStart()
@@ -34,15 +36,15 @@ class msfrpcdHandler:
             print("[!]MetasploitRPCD is already running!")
         else:
             os.system(f"gnome-terminal -- bash -c \"sudo msfrpcd -P 'password' -S -f -n -a 127.0.0.1; exec bash\"")
-            logging.info("Terminal Started and executed handler")
+            logger.info("Terminal Started and executed handler")
             # os.system("sudo msfrpcd -P 'password' -n -a 127.0.0.1")
             time.sleep(10)
             if self.checkMsfrpcd():
                 print("[!]Started MetasploitRPCD")
-                logging.info("Started initial MRPCD")
+                logger.info("Started initial MRPCD")
             else:
                 print("[!!]Not started. Please try again...")
-                logging.warning("Did not run and system exited")
+                logger.warning("Did not run and system exited")
                 sys.exit()
     
     def msfrpcdIsAlive(self):
@@ -50,7 +52,7 @@ class msfrpcdHandler:
         while thread_going:
             try:
                 if self.checkMsfrpcd():
-                    logging.info("MSFRPCD Still Active")
+                    logger.info("MSFRPCD Still Active")
                 else:
                     self.shutdownMsfrpcd()
                     self.msfrpcdStart()
@@ -70,4 +72,4 @@ class msfrpcdHandler:
                         #os.kill(s.pid, signal.SIGKILL)
                         os.system(f"gnome-terminal -e 'bash -c \"sudo fuser -k 55553/tcp ; exec bash\"'")
                         print('[!]Old MSFRPCD process destroyed.')
-                        logging.info("Old MSFRPCD process was destroyed")
+                        logger.info("Old MSFRPCD process was destroyed")

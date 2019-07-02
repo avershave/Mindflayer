@@ -5,8 +5,16 @@
 import json
 import random
 import time
+import logging
 from pymetasploit3.msfrpc import MsfError
 from transportModule import transportModule
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+fmtstr = logging.Formatter("%(asctime)s: %(levelname)s: %(message)s")
+file_handler = logging.FileHandler("logs/handler.log")
+file_handler.setFormatter(fmtstr)
+logger.addHandler(file_handler)
 
 class sessionMod:
 

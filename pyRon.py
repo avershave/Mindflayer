@@ -19,7 +19,7 @@ try:
     from pymetasploit3.msfconsole import MsfRpcConsole
     from connectMsfRpcClient import connectMsfRpcClient
     from sessionMod import sessionMod
-    #from msfrpcdHandler import msfrpcdHandler
+    from msfrpcdHandler import msfrpcdHandler
 except ImportError as msg:
     print(msg)
     print ("[-] Missing library pymetasploit")
@@ -27,22 +27,7 @@ except ImportError as msg:
     print ("[*] \"cd pymetasploit3 && sudo python setup.py install\"")
     sys.exit()
 
-_log_file = pathlib.Path("logs/main.log")
-_log_dir = pathlib.Path("logs")
-if _log_dir.exists() == False:
-    os.mkdir("logs")
-if _log_file.exists() == False:
-    with open('logs/main.log', 'a') as fp:
-        fp.write("CREATING NEW LOG FILE")
-        fp.close()
-
-class pyRon:
-    fmtstr = "%(asctime)s: %(levelname)s: %(message)s"
-    logging.basicConfig(filename=_log_file,
-                    level=logging.DEBUG,
-                    filemode="w",
-                    format=fmtstr)
-    
+class pyRon:  
     # Conditonals
     emptyPasswordChoice = ''
     setSSL = ''
@@ -59,7 +44,7 @@ class pyRon:
         Automation added to make the setup straight forward.
         '''
         print("[!]Starting msfrpcd on local host")
-        # msfrpcdHandler()
+        msfrpcdHandler()
         # Adding Customization OR using defaults
         try:
             automation = input("[!]Start automation or manual y/n: ").upper()

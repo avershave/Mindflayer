@@ -5,8 +5,8 @@
 
 ## Accomplished so far:
 1. Built framework for user input
-			- Able to print sessions, jobs, and interact with meterpreter(with output)
-			- Currently working with transport within meterpreter
+	- Able to print sessions, jobs, and interact with meterpreter(with output)
+	- Currently working with transport within meterpreter
 2. Started creating automation
 3. Able to parse data using JSON
 

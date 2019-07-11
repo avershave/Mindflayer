@@ -9,6 +9,10 @@ import logging
 from pymetasploit3.msfrpc import MsfError
 from transportModule import transportModule
 from masterLogger import masterLogger
+from data.data_services import create_session
+from lib.Reconnaissance.reconnaissance import Reconnaissance
+from lib.Confusion.confusion import Confusion
+from lib.PrivilegeEscalation.escalation import Escalation
 
 class sessionMod:
 
@@ -18,6 +22,7 @@ class sessionMod:
     def __init__(self, msfclient):
         self.msfclient = msfclient
         self.dumpSession()
+        self.retrieveSession()
     
     def dumpSession(self):
         '''
@@ -33,6 +38,7 @@ class sessionMod:
         json_file = open('json/sessionJSON.json')
         json_read = json_file.read()
         sessionFromJson = json.loads(json_read)
+        create_session(sessionFromJson)
         return sessionFromJson
         
     def sessionPrint(self):
@@ -61,6 +67,8 @@ class sessionMod:
             print("2.) Send Command to Session")
             print("3.) Start active session controller")
             print("4.) Transport List")
+            print("5.) Testing IP")
+            print("6.) Testing other PowerShell cmds")
             print("press 0 to exit...")
             selection = int(input("[!] Please select an option: "))
             if selection == 1:
@@ -79,7 +87,13 @@ class sessionMod:
                 self.transportModule = transportModule(_transport_input, self.msfclient)
                 self.transportModule.printTransportList()
             if selection == 5:
-                self.transportModule.transportAdd("reverse_http", "0.0.0.0", "4444")
+                Reconnaissance.gatherNetwork(self, self.msfclient, '1')
+                Reconnaissance.gatherCurrentAdmin(self, self.msfclient, '1')
+                Reconnaissance.gatherWhoAmI(self, self.msfclient, '1')
+            if selection == 6:
+                Confusion.openAlertBox(self, self.msfclient, '1')
+            if selection == 7:
+                Escalation.getElevated(self, self.msfclient, '1')
             if selection == 0:
                 return True
     

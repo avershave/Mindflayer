@@ -13,6 +13,10 @@ try:
     import os
     from masterLogger import masterLogger
     logger = masterLogger('logs', 'logs/main.log', __name__)
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
+    from mongo_setup import global_init
+    import data.data_services as svc
 except ImportError as msg:
     print ("[-] Library not installed: " + str(msg))
     print ("[*] Try installing it with: pip install " + str(msg.msg))
@@ -31,7 +35,11 @@ except ImportError as msg:
     print ("[*] \"cd pymetasploit3 && sudo python setup.py install\"")
     sys.exit()
 
-class pyRon:  
+class pyRon:
+    # starting mongo
+    global_init()
+    # clearing sessions for new sessions
+    svc.deleteSessions()
     # Conditonals
     emptyPasswordChoice = ''
     setSSL = ''

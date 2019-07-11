@@ -1,1 +1,21 @@
-{}
+{
+    "1": {
+        "type": "meterpreter",
+        "tunnel_local": "192.168.130.1:4444",
+        "tunnel_peer": "192.168.130.130:49797",
+        "via_exploit": "exploit/multi/handler",
+        "via_payload": "payload/windows/x64/meterpreter/reverse_http",
+        "desc": "Meterpreter",
+        "info": "DESKTOP-DA8VDGV\\testStation @ DESKTOP-DA8VDGV",
+        "workspace": "false",
+        "session_host": "192.168.130.130",
+        "session_port": 49797,
+        "target_host": "",
+        "username": "root",
+        "uuid": "0v1r09la",
+        "exploit_uuid": "t16x2knf",
+        "routes": "",
+        "arch": "x64",
+        "platform": "windows"
+    }
+}

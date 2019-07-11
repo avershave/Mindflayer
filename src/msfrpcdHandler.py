@@ -29,13 +29,9 @@ class msfrpcdHandler:
             logger.info("Terminal Started and executed handler")
             # os.system("sudo msfrpcd -P 'password' -n -a 127.0.0.1")
             time.sleep(10)
-            if self.checkMsfrpcd():
-                print("[!]Started MetasploitRPCD")
-                logger.info("Started initial MRPCD")
-            else:
-                print("[!!]Not started. Please try again...")
-                logger.warning("Did not run and system exited")
-                sys.exit()
+            while not self.checkMsfrpcd():
+                print("[!]Please type in password for MetasploitRPCD")
+                time.sleep(5)
     
     def msfrpcdIsAlive(self):
         thread_going = True

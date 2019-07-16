@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from data.recon import Recon
+from data.recon import ReconFiles
 from data.session import Session
 import re
 
@@ -115,15 +116,47 @@ class Reconnaissance():
             if session:
                 recon = Recon.objects(session_id=sessionInput).first()
                 if recon:
-                    recon.pwd.append(current_pwd)
+                    if recon.pwd == current_pwd:
+                        pass
+                    else:
+                        recon.pwd = current_pwd
+                        reconfiles = ReconFiles()
+                        reconfiles.dir_name = current_pwd
+                        recon.directory.append(reconfiles)
                 else:
                     recon = Recon()
                     recon.session_id = sessionInput
                     recon._id = sessionInput
                     session.recon_id.append(recon.session_id)
-                    recon.pwd.append(current_pwd)
+                    recon.pwd = current_pwd
+                    reconfiles = ReconFiles()
+                    reconfiles.dir_name = current_pwd
+                    recon.directory.append(reconfiles)
             recon.save()
             session.save()
+        except Exception as msg:
+            print(msg)
+            pass
+    
+    def gatherFiles(self, msfclient, sessionInput):
+        try:
+            listofFiles = msfclient.client.sessions.session(sessionInput).run_with_output('ls').splitlines()
+            session = Session.objects(_id=sessionInput).first()
+            if session:
+                recon = Recon.objects(_id=sessionInput).first()
+                directory = Recon.objects().filter(directory__dir_name=recon.pwd)
+                if directory:
+                    for r in directory:
+                        for d in r.directory:
+                            if d.gathered == False:
+                                d.gathered = True
+                                for f in listofFiles:
+                                    d.files.append(f)
+                                r.save()
+                            else:
+                                #TODO
+                                #Check the files and if a file is not in the list, add the file
+                                pass
         except Exception as msg:
             print(msg)
             pass

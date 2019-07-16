@@ -6,7 +6,6 @@ from pymetasploit3.msfrpc import MsfRpcClient
 from pymetasploit3.msfrpc import MsfRpcError
 from ssl import SSLError
 import socket
-from masterLogger import masterLogger
 
 
 class connectMsfRpcClient:

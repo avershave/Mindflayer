@@ -3,6 +3,9 @@
 import mongoengine
 
 class EscalationData(mongoengine.Document):
+    '''
+    Puts escalation data into the database
+    '''
     _id = mongoengine.StringField()
     getsystem = mongoengine.BooleanField()
 

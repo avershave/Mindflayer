@@ -25,14 +25,18 @@ except ImportError as msg:
 try:
     from pymetasploit3.msfrpc import MsfRpcError, MsfRpcClient
     from pymetasploit3.msfconsole import MsfRpcConsole
-    from connectMsfRpcClient import connectMsfRpcClient
-    from sessionMod import sessionMod
-    from msfrpcdHandler import msfrpcdHandler
 except ImportError as msg:
     print(msg)
     print ("[-] Missing library pymetasploit")
     print ("[*] Please clone from \"git clone https://github.com/DanMcInerney/pymetasploit3.git\"")
     print ("[*] \"cd pymetasploit3 && sudo python setup.py install\"")
+    sys.exit()
+try:
+    from connectMsfRpcClient import connectMsfRpcClient
+    from sessionMod import sessionMod
+    from msfrpcdHandler import msfrpcdHandler
+except ImportError as msg:
+    print(msg)
     sys.exit()
 
 class pyRon:
@@ -85,12 +89,8 @@ class pyRon:
                         self.username = 'msf'
                     self.password = input('[Set Password] Please enter the password: ')
                     if self.password == '':
-                        self.emptyPasswordChoice == input('[Set Password] Would you like to set an empty password? y/n: ').upper()
-                        if self.emptyPasswordChoice == 'Y':
-                            self.password = ''
-                        elif self.emptyPasswordChoice == 'N':
-                            print ('[Set Password] Using default password: msf')
-                            self.password = 'msf'
+                        print ('[Set Password] Using default password: msf')
+                        self.password = 'msf'
                     self.port = input('[Set Port] Please enter the port: ')
                     if self.port == '':
                         print('[Set Port] Using default port: 55553')
@@ -151,76 +151,100 @@ class pyRon:
                     logger.info("Wrong value for required options")
                     print("Value error: " + str(msg))
                     continue
-        try:
-            logger.info("Entering changing options for exploit and payload")
-            g = False
-            print("[+]Printing run options...")
-            for options, values in runOptions.items():
-                print(options, ":", values)
-            uc = input("[!]Do you want to change these values? y/n: ").upper()
-            while g == False:
-                if uc == 'N':
-                    return True
-                elif uc == "Y":
-                    sg = False
-                    while sg == False:
-                        c = input("[!]Which option would you like to change: ")
-                        # _isTrue = c in runOptions REMOVE IF IF STATEMENT WORKS
-                        if c in runOptions:
-                            cv = input("[!]Please enter new value: ")
-                            if type(runOptions[c]) == bool:
-                                if cv == 'False':
-                                    cv = False
-                                else:
-                                    cv = True
-                            if type(runOptions[c]) == (int, float):
-                                cv = int(cv)
-                            runOptions[c] = cv
-                            for options, values in runOptions.items():
-                                print(options, ":", values)
-                        if c == '':
-                            uc = input("[!]Done changing values y/n:")
-                        uc = input("[!]Do you want to change another value y/n: ").upper()
-                        if uc == 'N':
-                            return True
-                        else:
-                            return False
-        except ValueError:
-            logger.info("Wrong input in exploit options and payload options. Program exiting.")
-            print("Wrong input!")
-            sys.exit()
+        menu = True
+        while menu:
+            try:
+                logger.info("Entering changing options for exploit and payload")
+                g = False
+                print("[+]Printing run options...")
+                for options, values in runOptions.items():
+                    print(options, ":", values)
+                uc = input("[!]Do you want to change these values? y/n: ").upper()
+                if uc not in ['Y', 'N']:
+                    raise ValueError
+                while g == False:
+                    if uc == 'N':
+                        return True
+                    elif uc == "Y":
+                        sg = False
+                        while sg == False:
+                            c = input("[!]Which option would you like to change: ")
+                            # _isTrue = c in runOptions REMOVE IF IF STATEMENT WORKS
+                            if c in runOptions:
+                                cv = input("[!]Please enter new value: ")
+                                if type(runOptions[c]) == bool:
+                                    if cv == 'False':
+                                        cv = False
+                                    else:
+                                        cv = True
+                                if type(runOptions[c]) == (int, float):
+                                    cv = int(cv)
+                                runOptions[c] = cv
+                                for options, values in runOptions.items():
+                                    print(options, ":", values)
+                            if c == '':
+                                uc = input("[!]Done changing values y/n:")
+                            uc = input("[!]Do you want to change another value y/n: ").upper()
+                            if uc == 'N':
+                                return True
+                            else:
+                                return False
+                return False
+            except KeyboardInterrupt:
+                logger.info('Keyboard interrupt in exploit and payload options')
+                print('\n[!!]Exit Exploit and Payload Options')
+                break
+            except ValueError:
+                logger.info("Wrong input in exploit options and payload options. Program exiting.")
+                print("Wrong input!")
+                continue
 
 
     def execteSimpleExploit(self):
         '''
         User inputting exploit and payload
-
-        TODO: Change so that the input will loop if wrong input
         '''
-        try:
-            logger.info("Entering choice for exploit")
-            print ("[+]Using Exploit...")
-            exploit = input("[!]Please enter exploit: ")
-            exploit = self.msfclient.client.modules.use('exploit', exploit)
-            self.epMenu(exploit)
-            logger.info("Entering choice for payload")
-            print ("[+]Setting payload...")
-            payload = input("[!]Please enter payload: ")
-            _payload = self.msfclient.client.modules.use('payload', payload)
-            self.epMenu(_payload)
-            print("[+]Executing exploit...")
-            exploit.execute(payload=_payload)
-            time.sleep(10)
-            sessions = self.msfclient.client.sessions.list
-            if not sessions:
-                print('[!]No sessions connected directly after!')
-                print('[!]Please select option two in main menu to print connected sessions.')
-        except ValueError:
-            logging.info("Wrong value entering the exploit or payload file path")
-            print ("Wrong value for exploit!")
-            sys.exit()
+        menu = True
+        exploit = None
+        _payload = None
+        while menu:
+            try:
+                if exploit is None:
+                    logger.info("Entering choice for exploit")
+                    print ("[+]Using Exploit...")
+                    exploit = input("[!]Please enter exploit: ")
+                    exploit = self.msfclient.client.modules.use('exploit', exploit)
+                    self.epMenu(exploit)
+                if _payload is None:
+                    logger.info("Entering choice for payload")
+                    print ("[+]Setting payload...")
+                    payload = input("[!]Please enter payload: ")
+                    _payload = self.msfclient.client.modules.use('payload', payload)
+                    self.epMenu(_payload)
+                print("[+]Executing exploit...")
+                exploit.execute(payload=_payload)
+                time.sleep(10)
+                sessions = self.msfclient.client.sessions.list
+                if not sessions:
+                    print('[!]No sessions connected directly after!')
+                    print('[!]Please select option two in main menu to print connected sessions.')
+                return False
+            except KeyboardInterrupt:
+                print('\n[!!]Exit Exploit and Payload Menu')
+                break
+            except ValueError:
+                logging.info("Wrong value entering the exploit or payload file path")
+                print ("\n[!!]Wrong value for exploit! or payload")
+                continue
+            except TypeError:
+                logging.info("Wrong value entering the exploit or payload file path")
+                print ("\n[!!]Wrong value for exploit or payload!")
+                continue
         
     def listJobs(self):
+        '''
+        Prints currently running jobs.
+        '''
         logger.info("Printing job list")
         try:
             self.dumpJobs()
@@ -229,15 +253,20 @@ class pyRon:
                 print("\nJob ID: ", s_id)
                 for info in s_info:
                     print(info + ':', s_info[info])
-        except:
+        except Exception as msg:
+            print(msg)
             pass
 
     def dumpJobs(self):
+        '''
+        Dumps current jobs into a JSON file in order to read.
+        '''
         logger.info("Dumping current jobs. I really need a better name for this.")
         try:
             with open('json/jobsJSON.json', 'w') as fp:
                 json.dump(self.msfclient.client.jobs.list, fp, indent=4)
-        except:
+        except Exception as msg:
+            print(msg)
             pass
 
     def retrieveJobs(self):
@@ -245,10 +274,14 @@ class pyRon:
         '''
         Retrieve session from json file
         '''
-        json_file = open('json/jobsJSON.json', 'r')
-        json_read = json_file.read()
-        jobsFromJson = json.loads(json_read)
-        return jobsFromJson
+        try:
+            json_file = open('json/jobsJSON.json', 'r')
+            json_read = json_file.read()
+            jobsFromJson = json.loads(json_read)
+            return jobsFromJson
+        except Exception as msg:
+            print(msg)
+            pass
 
     def mainMenu(self):
         '''
@@ -260,35 +293,40 @@ class pyRon:
         print("[+]Console Running and Connected!")
         print("\n[!]Entering Main Menu")
         while menuGoing == False:
-            logger.info("Entering menu choice")
-            print("\n[***]Main[***]\n")
-            print("1.) Start Exploit and Payload")
-            print("2.) Enter Session Module")
-            print("press 0 to exit...")
-            selection = int(input("[!] Please select an option: "))
-            if selection == 1:
-                self.execteSimpleExploit()
-            if selection == 2:
-                logging.info("Changing over sessionMod")
-                self.sessionMod.sessionMenu()
-            if selection ==3:
-                self.listJobs()
-            if selection == 0:
-                logger.info("User is exiting")
-                print("[!!] Exiting...")
-                killall = input("[+]Kill all sessions? y/n: ").upper()
-                if killall == 'Y':
-                    logger.info("User killing sessions")
-                    self.msfclient.client.consoles.console(self.msfclient.console).write('sessions -K')
-                jobs = self.retrieveJobs()    
-                if jobs:
-                    killjobs = input("[+]Kill all jobs? y/n: ").upper()
-                    if killjobs == 'Y':
-                        logger.info("User killing jobs")
-                        for k in jobs:
-                            self.msfclient.client.jobs.stop(k)
-                self.msfclient.client.consoles.destroy(self.msfclient.console)
-                return True
+            try:
+                logger.info("Entering menu choice")
+                print("\n[***]Main[***]\n")
+                print("1.) Start Exploit and Payload")
+                print("2.) Enter Session Module")
+                print("press 0 to exit...")
+                selection = int(input("[!] Please select an option: "))
+                if selection == 1:
+                    self.execteSimpleExploit()
+                if selection == 2:
+                    logging.info("Changing over sessionMod")
+                    self.sessionMod.sessionMenu()
+                if selection == 3:
+                    self.listJobs()
+                if selection == 0:
+                    logger.info("User is exiting")
+                    print("[!!] Exiting...")
+                    killall = input("[+]Kill all sessions? y/n: ").upper()
+                    if killall == 'Y':
+                        logger.info("User killing sessions")
+                        self.msfclient.client.consoles.console(self.msfclient.console).write('sessions -K')
+                    jobs = self.retrieveJobs()    
+                    if jobs:
+                        killjobs = input("[+]Kill all jobs? y/n: ").upper()
+                        if killjobs == 'Y':
+                            logger.info("User killing jobs")
+                            for k in jobs:
+                                self.msfclient.client.jobs.stop(k)
+                    self.msfclient.client.consoles.destroy(self.msfclient.console)
+                    return True  
+            except Exception as msg:
+                print(msg)
+                print('\n[!!]Wrong input. Please select the correct input.')
+                continue
 
 # Execute Main
 try:

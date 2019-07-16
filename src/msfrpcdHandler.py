@@ -28,7 +28,7 @@ class msfrpcdHandler:
             os.system(f"gnome-terminal -- bash -c \"sudo msfrpcd -P 'password' -S -f -n -a 127.0.0.1; exec bash\"")
             logger.info("Terminal Started and executed handler")
             # os.system("sudo msfrpcd -P 'password' -n -a 127.0.0.1")
-            time.sleep(10)
+            time.sleep(15)
             while not self.checkMsfrpcd():
                 print("[!]Please type in password for MetasploitRPCD")
                 time.sleep(5)

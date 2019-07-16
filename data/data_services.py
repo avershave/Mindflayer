@@ -7,6 +7,9 @@ import mongoengine
 session_list = []
 
 def create_session(dictionary):
+    '''
+    creates session entry in the database
+    '''
     checkDisconnected(dictionary)
     for s_id, s_info in dictionary.items():
         if not s_id in session_list:
@@ -22,6 +25,9 @@ def create_session(dictionary):
         session.save()
 
 def checkDisconnected(dictionary):
+    '''
+    checks if a session is disconnected
+    '''
     if not session_list:
         pass
     else:
@@ -38,6 +44,9 @@ def checkDisconnected(dictionary):
 
 
 def deleteSessions():
+    '''
+    deletes all session data
+    '''
     Session.objects().delete()
     EscalationData.objects().delete()
     Recon.objects().delete()

@@ -3,6 +3,9 @@
 import mongoengine
 
 class Recon(mongoengine.Document):
+    '''
+    Takes in recon information and puts it into the database
+    '''
     _id = mongoengine.StringField()
     session_id = mongoengine.StringField()
     ip_address = mongoengine.StringField()

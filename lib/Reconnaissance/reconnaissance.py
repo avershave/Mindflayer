@@ -110,7 +110,20 @@ class Reconnaissance():
     
     def gatherPWD(self, msfclient, sessionInput):
         try:
-            pass
+            current_pwd = msfclient.client.sessions.session(sessionInput).run_with_output('pwd')
+            session = Session.objects(_id=sessionInput).first()
+            if session:
+                recon = Recon.objects(session_id=sessionInput).first()
+                if recon:
+                    recon.pwd.append(current_pwd)
+                else:
+                    recon = Recon()
+                    recon.session_id = sessionInput
+                    recon._id = sessionInput
+                    session.recon_id.append(recon.session_id)
+                    recon.pwd.append(current_pwd)
+            recon.save()
+            session.save()
         except Exception as msg:
             print(msg)
             pass

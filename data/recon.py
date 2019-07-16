@@ -14,6 +14,7 @@ class Recon(mongoengine.Document):
     whoami = mongoengine.StringField()
     isAdmin = mongoengine.BooleanField()
     whoIsAdmin = mongoengine.ListField()
+    pwd = mongoengine.ListField()
 
     meta = {
         'db_alias': 'core',

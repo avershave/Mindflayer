@@ -105,6 +105,7 @@ class sessionMod:
                     Reconnaissance.gatherNetwork(self, self.msfclient, '1')
                     Reconnaissance.gatherCurrentAdmin(self, self.msfclient, '1')
                     Reconnaissance.gatherWhoAmI(self, self.msfclient, '1')
+                    Reconnaissance.gatherPWD(self, self.msfclient, '1')
                 if selection == 6:
                     Confusion.openAlertBox(self, self.msfclient, '1')
                 if selection == 7:

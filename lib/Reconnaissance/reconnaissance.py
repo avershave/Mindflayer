@@ -140,6 +140,7 @@ class Reconnaissance():
     
     def gatherFiles(self, msfclient, sessionInput):
         try:
+            desc_files = ['Mode', 'Size', 'Type', 'Last', 'Modified', 'TimeZone', 'Name']
             listofFiles = msfclient.client.sessions.session(sessionInput).run_with_output('ls').splitlines()
             session = Session.objects(_id=sessionInput).first()
             if session:
@@ -151,12 +152,44 @@ class Reconnaissance():
                             if d.gathered == False:
                                 d.gathered = True
                                 for f in listofFiles:
-                                    d.files.append(f)
+                                    file = f.split()
+                                    if not f:
+                                        pass
+                                    elif 'Listing' in f:
+                                        pass
+                                    elif '=====================================' in file[0]:
+                                        pass
+                                    elif '----' in f:
+                                        pass
+                                    elif 'Mode' in file[0]:
+                                        pass
+                                    else:
+                                        files_mapped = dict(zip(desc_files, file))
+                                        d.files.append(files_mapped)
                                 r.save()
                             else:
-                                #TODO
-                                #Check the files and if a file is not in the list, add the file
-                                pass
+                                current_files = []
+                                for _dict in d.files:
+                                    current_files.append(_dict['Name'])
+                                for f in listofFiles:
+                                    file = f.split()
+                                    if not f:
+                                        pass
+                                    elif 'Listing' in f:
+                                        pass
+                                    elif '=====================================' in file[0]:
+                                        pass
+                                    elif '----' in f:
+                                        pass
+                                    elif 'Mode' in file[0]:
+                                        pass
+                                    else:
+                                        if file[6] in current_files:
+                                            pass
+                                        else:
+                                            files_mapped = dict(zip(desc_files, file))
+                                            d.files.append(files_mapped)
+                                r.save()
         except Exception as msg:
             print(msg)
             pass

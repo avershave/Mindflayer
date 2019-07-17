@@ -103,11 +103,12 @@ class sessionMod:
                     self.transportModule.printTransportList()
                 if selection == 5:
                     session_input = input("Please select a session: ")
-                    Reconnaissance.gatherNetwork(self, self.msfclient, session_input)
-                    Reconnaissance.gatherCurrentAdmin(self, self.msfclient, session_input)
-                    Reconnaissance.gatherWhoAmI(self, self.msfclient, session_input)
-                    Reconnaissance.gatherPWD(self, self.msfclient, session_input)
-                    Reconnaissance.gatherFiles(self, self.msfclient, session_input)
+                    recon = Reconnaissance()
+                    recon.gatherNetwork(self.msfclient, session_input)
+                    recon.gatherCurrentAdmin(self.msfclient, session_input)
+                    recon.gatherWhoAmI(self.msfclient, session_input)
+                    recon.gatherPWD(self.msfclient, session_input)
+                    recon.gatherFiles(self.msfclient, session_input)
                 if selection == 6:
                     Confusion.openAlertBox(self, self.msfclient, '1')
                 if selection == 7:

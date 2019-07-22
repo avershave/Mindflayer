@@ -3,6 +3,7 @@ from data.recon import Recon
 from data.recon import ReconFiles
 from data.session import Session
 import re
+import time
 from src.masterLogger import masterLogger
 logger = masterLogger('logs', 'logs/lib.log', __name__)
 
@@ -145,31 +146,108 @@ class Reconnaissance():
                                     current_files.append(_dict['Name'])
                                 for f in listofFiles:
                                     file = self.parseFileData(f)
-                                    if file[6] in current_files:
+                                    if not file:
                                         pass
                                     else:
-                                        files_mapped = dict(zip(desc_files, file))
-                                        d.files.append(files_mapped)
-                                r.save()
+                                        #First check if the file is in the dict
+                                        if file[6] in current_files:
+                                            for found_dict in d.files:
+                                                if file[6]==found_dict['Name']:
+                                                    self.checkingFileChanges(file, found_dict)
+                                                else:
+                                                    pass
+                                        else:
+                                        #if not, add the new file info in the dict
+                                            files_mapped = dict(zip(desc_files, file))
+                                            d.files.append(files_mapped)
+
+                            r.save()
         except Exception as msg:
             logger.info(msg)
             print("There was an error!")
             pass
-
-    def parseFileData(self, f):
-            file = f.split()
-            if not f:
+    
+    def gatherInstalledPrograms(self, msfclient, sessionInput):
+        program_desc = ['Name', 'Version']
+        session = Session.objects(_id=sessionInput).first()
+        run_post = msfclient.client.sessions.session(sessionInput).run_with_output('run post/windows/gather/enum_applications')
+        time.sleep(8)
+        listofPrograms = run_post.splitlines()
+        if session:
+            recon = Recon.objects(_id=sessionInput).first()
+            if recon is None:
+                 recon = Recon()
+                 recon._id = sessionInput
+                 recon.session_id = sessionInput
+                 session.recon_id.append(recon.session_id)
+            for p in listofPrograms:
+                program = self.parseProgramList(p)
+                if not program:
+                    pass
+                else:
+                    programs_mapped = dict(zip(program_desc, program))
+                    recon.installedprg.append(programs_mapped)
+        recon.save()
+        session.save()
+    
+    def gatherPID(self, msfclient, sessionInput):
+        pid_list = []
+        desc_pid = ['PID', 'Name']
+        run_ps = msfclient.client.sessions.session(sessionInput).run_with_output('ps')
+        time.sleep(8)
+        listofPID = run_ps.splitlines()
+        for line in listofPID:
+            info = line.split()
+            if not line:
                 pass
-            elif 'Listing' in f:
+            elif 'PID' in line:
                 pass
-            elif '=====================================' in file[0]:
+            elif '=' in line:
                 pass
-            elif '----' in f:
+            elif 'Proces' in line:
                 pass
-            elif 'Mode' in file[0]:
+            elif '---' in line:
                 pass
             else:
-                return file
+                temp_list = [info[0], info[2]]
+                pid_mapped = dict(zip(desc_pid, temp_list))
+                pid_list.append(pid_mapped)
+        return pid_list
+
+
+    def parseProgramList(self, p):
+        if not p:
+            pass
+        elif 'Installed' in p:
+            pass
+        elif 'Name' in p:
+            pass
+        elif '----' in p:
+            pass
+        elif '[+]' in p:
+            pass
+        elif '[*]' in p:
+            pass
+        elif '=' in p:
+            pass
+        else:
+            programs = re.split(r'\s{2,}', p)
+            return programs
+
+    def parseFileData(self, f):
+        file = f.split()
+        if not f:
+            pass
+        elif 'Listing' in f:
+            pass
+        elif '=====================================' in file[0]:
+            pass
+        elif '----' in f:
+            pass
+        elif 'Mode' in file[0]:
+            pass
+        else:
+            return file
     
     def parseIPData(self, recon, ip):
         for lines in ip.splitlines():
@@ -186,3 +264,13 @@ class Reconnaissance():
                 found_dhcp = re.findall( r'[0-9]+(?:\.[0-9]+){3}',lines)
             if 'Subnet Mask' in lines:
                 found_subnet_mask = re.findall( r'[0-9]+(?:\.[0-9]+){3}',lines)
+    
+    def checkingFileChanges(self, file, _dict):
+        i = 0
+        for k, v in _dict.items():
+            if v == file[i]:
+                i = i + 1
+                pass
+            else:
+                _dict[k] = file[i]
+                i = i + 1

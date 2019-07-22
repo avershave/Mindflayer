@@ -24,6 +24,7 @@ class Recon(mongoengine.Document):
     isAdmin = mongoengine.BooleanField()
     whoIsAdmin = mongoengine.ListField()
     pwd = mongoengine.StringField()
+    installedprg = mongoengine.ListField()
 
     directory = mongoengine.EmbeddedDocumentListField(ReconFiles)
 

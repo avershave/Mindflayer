@@ -16,7 +16,6 @@ try:
     dir_path = os.path.dirname(os.path.realpath(__file__))
     sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
     from mongo_setup import global_init
-    import data.data_services as svc
 except ImportError as msg:
     print ("[-] Library not installed: " + str(msg))
     print ("[*] Try installing it with: pip install " + str(msg.msg))
@@ -35,6 +34,8 @@ try:
     from connectMsfRpcClient import connectMsfRpcClient
     from sessionMod import sessionMod
     from msfrpcdHandler import msfrpcdHandler
+    import data.data_services as svc
+    from msfAutomation import msfAutomation
 except ImportError as msg:
     print(msg)
     sys.exit()
@@ -64,16 +65,17 @@ class pyRon:
         Puts you into mainMenu.
         Automation added to make the setup straight forward.
         '''
-        print("[!]Starting msfrpcd on local host")
-        msfrpcdHandler()
         # Adding Customization OR using defaults
         try:
             automation = input("[!]Start automation or manual y/n: ").upper()
             if automation == 'Y':
                 logger.info("Started Automation")
-                pass
+                self.msfclient = connectMsfRpcClient('msf', 'password', '55553', '127.0.0.1', 'False')
+                msfAutomation(self.msfclient)
+                self.Exit()
             if automation == 'N':
                 logger.info("Starting client setup")
+                msfrpcdHandler()
                 useDefaults = input("[DEFAULTS] Would you like to use the all defaults? y/n: ").upper()
                 if useDefaults == 'Y':
                     self.username = 'msf'
@@ -308,25 +310,28 @@ class pyRon:
                 if selection == 3:
                     self.listJobs()
                 if selection == 0:
-                    logger.info("User is exiting")
-                    print("[!!] Exiting...")
-                    killall = input("[+]Kill all sessions? y/n: ").upper()
-                    if killall == 'Y':
-                        logger.info("User killing sessions")
-                        self.msfclient.client.consoles.console(self.msfclient.console).write('sessions -K')
-                    jobs = self.retrieveJobs()    
-                    if jobs:
-                        killjobs = input("[+]Kill all jobs? y/n: ").upper()
-                        if killjobs == 'Y':
-                            logger.info("User killing jobs")
-                            for k in jobs:
-                                self.msfclient.client.jobs.stop(k)
-                    self.msfclient.client.consoles.destroy(self.msfclient.console)
-                    return True  
+                    self.Exit()
+                    exit(0)
             except Exception as msg:
                 print(msg)
                 print('\n[!!]Wrong input. Please select the correct input.')
                 continue
+
+    def Exit(self):
+        logger.info("User is exiting")
+        print("[!!] Exiting...")
+        killall = input("[+]Kill all sessions? y/n: ").upper()
+        if killall == 'Y':
+            logger.info("User killing sessions")
+            self.msfclient.client.consoles.console(self.msfclient.console).write('sessions -K')
+        jobs = self.retrieveJobs()    
+        if jobs:
+            killjobs = input("[+]Kill all jobs? y/n: ").upper()
+            if killjobs == 'Y':
+                logger.info("User killing jobs")
+                for k in jobs:
+                    self.msfclient.client.jobs.stop(k)
+        self.msfclient.client.consoles.destroy(self.msfclient.console)
 
 # Execute Main
 try:

@@ -11,6 +11,13 @@ class ReconFiles(mongoengine.EmbeddedDocument):
     files = mongoengine.ListField()
     gathered = mongoengine.BooleanField(default=False)
 
+class ReconPrograms(mongoengine.EmbeddedDocument):
+    '''
+    Tracks programs installed on the current sessions
+    '''
+    installedprograms = mongoengine.ListField()
+    gathered = mongoengine.BooleanField(default=False)
+
 class Recon(mongoengine.Document):
     '''
     Takes in recon information and puts it into the database
@@ -24,8 +31,9 @@ class Recon(mongoengine.Document):
     isAdmin = mongoengine.BooleanField()
     whoIsAdmin = mongoengine.ListField()
     pwd = mongoengine.StringField()
-    installedprg = mongoengine.ListField()
 
+
+    installedprg = mongoengine.EmbeddedDocumentField(ReconPrograms)
     directory = mongoengine.EmbeddedDocumentListField(ReconFiles)
 
     meta = {

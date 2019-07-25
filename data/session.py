@@ -38,5 +38,5 @@ class Session(mongoengine.Document):
 
     meta = {
         'db_alias': 'core',
-        'collection': 'sessions'
+        'collection': 'Sessions'
     }

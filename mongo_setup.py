@@ -7,5 +7,5 @@ def global_init():
     (output, err) = p.communicate()
     output = output.decode('utf-8').rstrip("\n")
     if output == "active":
-        mongoengine.register_connection(alias='core', db='sploitstreet')
+        mongoengine.register_connection(alias='core', db='mindflayer')
         print("[!]Started MongoDB")

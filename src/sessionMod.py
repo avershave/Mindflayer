@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 # Takes in a session from mainMenu of pyRon and you are able to send commands to it
 # Has it's own menu which can exit into mainMenu just by returning false
-
+import os
+import pathlib
+import sys
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
 import json
 import random
 import time
@@ -82,7 +86,7 @@ class sessionMod:
                 print("2.) Send Command to Session")
                 print("3.) Start active session controller")
                 print("4.) Transport List")
-                print("5.) Testing IP")
+                print("5.) Testing Recon")
                 print("6.) Testing other PowerShell cmds")
                 print("press 0 to exit...")
                 selection = int(input("[!] Please select an option: "))

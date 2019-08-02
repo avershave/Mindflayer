@@ -11,11 +11,6 @@ try:
     import json
     import pathlib
     import os
-    from masterLogger import masterLogger
-    logger = masterLogger('logs', 'logs/main.log', __name__)
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
-    from mongo_setup import global_init
 except ImportError as msg:
     print ("[-] Library not installed: " + str(msg))
     print ("[*] Try installing it with: pip install " + str(msg.msg))
@@ -34,8 +29,13 @@ try:
     from connectMsfRpcClient import connectMsfRpcClient
     from sessionMod import sessionMod
     from msfrpcdHandler import msfrpcdHandler
-    import data.data_services as svc
     from msfAutomation import msfAutomation
+    from masterLogger import masterLogger
+    logger = masterLogger('logs', 'logs/main.log', __name__)
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
+    import data.data_services as svc
+    from mongo_setup import global_init
 except ImportError as msg:
     print(msg)
     sys.exit()
@@ -46,7 +46,6 @@ class pyRon:
     # clearing sessions for new sessions
     svc.deleteSessions()
     # Conditonals
-    emptyPasswordChoice = ''
     setSSL = ''
 
     # Object
@@ -137,7 +136,7 @@ class pyRon:
         Can't run more than two arguments!!!
         '''
         choice = args[0]
-        runOptions = choice.runoptions
+        runOptions = choice.options
         if not choice.missing_required:
             print("[!]No required options!")
         else:
@@ -148,6 +147,11 @@ class pyRon:
                 try:
                     for r in choice.missing_required:
                         c = input(f"[!]{r}: ")
+                        if '.' in c:
+                            pass
+                        else:
+                            if any(char.isdigit() for char in c):
+                                c = int(c)
                         choice[r] = c
                 except ValueError as msg:
                     logger.info("Wrong value for required options")
@@ -159,8 +163,8 @@ class pyRon:
                 logger.info("Entering changing options for exploit and payload")
                 g = False
                 print("[+]Printing run options...")
-                for options, values in runOptions.items():
-                    print(options, ":", values)
+                for options in runOptions:
+                    print(options)
                 uc = input("[!]Do you want to change these values? y/n: ").upper()
                 if uc not in ['Y', 'N']:
                     raise ValueError
@@ -174,16 +178,14 @@ class pyRon:
                             # _isTrue = c in runOptions REMOVE IF IF STATEMENT WORKS
                             if c in runOptions:
                                 cv = input("[!]Please enter new value: ")
-                                if type(runOptions[c]) == bool:
-                                    if cv == 'False':
-                                        cv = False
-                                    else:
-                                        cv = True
-                                if type(runOptions[c]) == (int, float):
-                                    cv = int(cv)
-                                runOptions[c] = cv
-                                for options, values in runOptions.items():
-                                    print(options, ":", values)
+                                if '.' in cv:
+                                    pass
+                                else:
+                                    if any(char.isdigit() for char in cv):
+                                        cv = int(cv)
+                                choice[c] = cv
+                                for options in runOptions:
+                                    print(options)
                             if c == '':
                                 uc = input("[!]Done changing values y/n:")
                             uc = input("[!]Do you want to change another value y/n: ").upper()
@@ -234,10 +236,11 @@ class pyRon:
             except KeyboardInterrupt:
                 print('\n[!!]Exit Exploit and Payload Menu')
                 break
-            except ValueError:
+            except ValueError as msg:
                 logging.info("Wrong value entering the exploit or payload file path")
+                logging.info(msg)
                 print ("\n[!!]Wrong value for exploit! or payload")
-                continue
+                break
             except TypeError:
                 logging.info("Wrong value entering the exploit or payload file path")
                 print ("\n[!!]Wrong value for exploit or payload!")

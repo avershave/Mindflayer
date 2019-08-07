@@ -241,7 +241,7 @@ class Reconnaissance():
         domain_user = []
         post = msfclient.client.modules.use('post', 'windows/gather/enum_domain')
         post['SESSION'] = sessionInput
-        cid = msfclient.client.consoles.console().cid
+        cid = msfclient.console
         run_enum_domain = msfclient.client.consoles.console(cid).run_module_with_output(post)
         for line in run_enum_domain.splitlines():
             if '[-]' in line:

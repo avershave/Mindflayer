@@ -3,7 +3,6 @@ from data.recon import Recon
 from data.recon import ReconFiles
 from data.recon import ReconPrograms
 from data.recon import ReconDomain
-from data.recon import ReconDomainUsers
 from data.session import Session
 import re
 import time

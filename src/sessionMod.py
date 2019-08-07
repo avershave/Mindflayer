@@ -106,7 +106,7 @@ class sessionMod:
                     self.transportModule = transportModule(_transport_input, self.msfclient)
                     self.transportModule.printTransportList()
                 if selection == 5:
-                    session_input = input("Please select a session: ")
+                    session_input = int(input("Please select a session: "))
                     recon = Reconnaissance()
                     # recon.gatherNetwork(self.msfclient, session_input)
                     # recon.gatherCurrentAdmin(self.msfclient, session_input)

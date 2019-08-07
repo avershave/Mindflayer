@@ -68,9 +68,9 @@ class pyRon:
         json_path = dir_path+'/json'
         if not os.path.isdir(json_path):
             os.mkdir(json_path)
-        with open(json_path+'/jobsJSON.json'): pass
-        with open(json_path+'/sessionJSON.json'): pass
-        with open(json_path+'/transportJSON.json'): pass
+        file = open(json_path+'/jobsJSON.json')
+        file = open(json_path+'/sessionJSON.json')
+        file = open(json_path+'/transportJSON.json')
 
         # Adding Customization OR using defaults
         try:

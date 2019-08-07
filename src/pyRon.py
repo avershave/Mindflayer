@@ -64,6 +64,14 @@ class pyRon:
         Puts you into mainMenu.
         Automation added to make the setup straight forward.
         '''
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        json_path = dir_path+'/json'
+        if not os.path.isdir(json_path):
+            os.mkdir(json_path)
+            with open(json_path+'/jobsJSON.json'): pass
+            with open(json_path+'/sessionJSON.json'): pass
+            with open(json_path+'/transportJSON.json'): pass
+
         # Adding Customization OR using defaults
         try:
             automation = input("[!]Start automation or manual y/n: ").upper()

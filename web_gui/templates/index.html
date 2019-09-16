@@ -1,0 +1,118 @@
+{% block styles %}
+{{ bootstrap.load_css() }}
+{% endblock styles %}
+{% block script %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+<script
+  src="https://code.jquery.com/jquery-3.4.1.js"
+  integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+  crossorigin="anonymous"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+    var socket = io.connect('http://127.0.0.1:7000/');
+
+    socket.on('connect', function(){
+        socket.send('Welcome to Mindflayer');
+    });
+
+    socket.on('new session', function(session){
+        console.log("Added sessions")
+        $('#containerSessions').append('<div class="row" id="rowsession'+session._id+'"></div>')
+        $("#rowsession"+session._id).append( '<p><a class="btn btn-success btn-md m-1" data-toggle="collapse" href="#session'+session._id+'" role="button" aria-expanded="false" aria-controls="'+session._id+'">Session: '+session._id+'</a></p>')
+        $("#rowsession"+session._id).append('<div class="collapse" id="session'+session._id+'"></div>')
+        $("#session"+session._id).append('<div class="card card-body" style="height: 250px; overflow-y: scroll" id="info'+session._id+'"></div>')
+        for (let [key, value] of Object.entries(session)) {
+            $("#info"+session._id).append('<p>'+key+': '+value+'</p>')
+        }
+    });
+    
+    socket.on('new event', function(event){
+        console.log("Added event")
+        $('#eventList').append('<li class="list-group-item">'+event+'</li>');
+        $('#eventList').animate({ scrollTop: $('#eventList')[0].scrollHeight}, 300);
+    });
+});
+</script>
+{{ bootstrap.load_js() }}
+{% endblock script %}
+
+{% block body %}
+    <h1>Mindflayer</h1>
+<div class="container-fluid" id="containerSessions">
+    <h3>Sessions</h3>
+        {% for s in session %}
+            <div class="row m-1" id="rowsession{{ s._id }}">
+            {% if s.isDisconnected == False %}
+                        <div class="collapse" id="session{{s._id}}">
+                            <div class="card card-body" style="height: 250px; overflow-y: scroll" id='info{{s._id}}'>
+                                {% for key, value in s.items() %}
+                                    <p>{{key}}: {{value}}</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    <p>
+                        <a class="btn btn-success btn-md m-1" data-toggle="collapse" href="#session{{ s._id }}" role="button" aria-expanded="false" aria-controls="session{{ s._id }}">Session: {{ s._id }}
+                        </a>   
+                    </p>
+                        {% for r in recon %}
+                            {% if r.session_id == s._id %}
+                                <p>
+                                    <a class="btn btn-success btn-md m-1" data-toggle="collapse" href="#recon{{ r.session_id }}" role="button" aria-expanded="false" aria-controls="recon{{ r.session_id }}">Recon: {{ r.session_id }}
+                                    </a>
+                                </p>
+
+                                <div class="collapse" id="recon{{ r.session_id }}">
+                                    <div class="card card-body" style="height: 250px; overflow-y: scroll" id='reconinfo{{ r.session_id }}'>
+                                        {% for key, value in r.items() %}
+                                            <p>{{key}}: {{value}}</p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                        {% set recon = recon.rewind()%}
+            
+            {% else %}
+                        <div class="collapse" id="session{{s._id}}">
+                            <div class="card card-body" style="height: 250px; overflow-y: scroll" id='info{{s._id}}'>
+                                {% for key, value in s.items() %}
+                                    <p>{{key}}: {{value}}</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    <p>
+                        <a class="btn btn-danger btn-md m-1" data-toggle="collapse" href="#session{{ s._id }}" role="button" aria-expanded="false" aria-controls="session{{ s._id }}">Session: {{ s._id }}
+                        </a>
+                    </p>
+                        {% for r in recon %}
+                            {% if r.session_id == s._id %}
+                            <p>
+                                <a class="btn btn-danger btn-md m-1" data-toggle="collapse" href="#recon{{ r.session_id }}" role="button" aria-expanded="false" aria-controls="recon{{ r.session_id }}">Recon: {{ r.session_id }}
+                                </a>
+                            </p>
+
+                                <div class="collapse" id="recon{{ r.session_id }}">
+                                    <div class="card card-body" style="height: 250px; overflow-y: scroll" id='reconinfo{{ r.session_id }}'>
+                                        {% for key, value in r.items() %}
+                                            <p>{{key}}: {{value}}</p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                        {% set recon = recon.rewind()%}
+
+            {% endif %}
+        </div>
+        {% endfor %}
+</div>
+
+    <div class="container-fluid" id="containerEvents">
+        <h3>Event Log</h3>
+        <ul class="list-group" id="eventList" style="height: 250px; overflow-y: scroll">
+        {% for e in event %}
+            <li class="list-group-item">{{ e.calledEvent }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+{% endblock body %}

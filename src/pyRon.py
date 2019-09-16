@@ -292,8 +292,8 @@ class pyRon:
             json_read = json_file.read()
             jobsFromJson = json.loads(json_read)
             return jobsFromJson
-        except Exception as msg:
-            print(msg)
+        except Exception:
+            logger.info("No jobs. Closing as normal.")
             pass
 
     def mainMenu(self):

@@ -27,15 +27,22 @@ class ReconPrograms(mongoengine.EmbeddedDocument):
     installedprograms = mongoengine.ListField()
     gathered = mongoengine.BooleanField(default=False)
 
+class ReconNetwork(mongoengine.EmbeddedDocument):
+    '''
+    Tracks network adapters and their properties
+    '''
+    adapter = mongoengine.StringField()
+    ip_address = mongoengine.StringField()
+    defaultgateway = mongoengine.StringField()
+    dns = mongoengine.StringField()
+
+
 class Recon(mongoengine.Document):
     '''
     Takes in recon information and puts it into the database
     '''
     _id = mongoengine.StringField() # the id will be the session ID
     session_id = mongoengine.StringField()
-    ip_address = mongoengine.StringField()
-    defaultgateway = mongoengine.StringField()
-    dns = mongoengine.StringField()
     whoami = mongoengine.StringField()
     isAdmin = mongoengine.BooleanField()
     whoIsAdmin = mongoengine.ListField()
@@ -45,6 +52,7 @@ class Recon(mongoengine.Document):
     installedprg = mongoengine.EmbeddedDocumentField(ReconPrograms)
     directory = mongoengine.EmbeddedDocumentListField(ReconFiles)
     domain = mongoengine.EmbeddedDocumentField(ReconDomain)
+    network_adapters = mongoengine.ListField(mongoengine.EmbeddedDocumentField(ReconNetwork))
 
     meta = {
         'db_alias': 'core',

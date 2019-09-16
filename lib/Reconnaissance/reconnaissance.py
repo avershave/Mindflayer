@@ -3,7 +3,9 @@ from data.recon import Recon
 from data.recon import ReconFiles
 from data.recon import ReconPrograms
 from data.recon import ReconDomain
+from data.recon import ReconNetwork
 from data.session import Session
+from data.event import Event, EventUtils
 import re
 import time
 from src.masterLogger import masterLogger
@@ -18,6 +20,7 @@ class Reconnaissance():
     '''
 
     def gatherNetwork(self, msfclient, sessionInput):
+        EventUtils.settingEvent(self, "Gathering network info on session " + sessionInput + ".")
         try:
             session = Session.objects(_id=sessionInput).first()
             ip = msfclient.client.sessions.session(sessionInput).run_psh_cmd("ipconfig /all")
@@ -35,10 +38,11 @@ class Reconnaissance():
             session.save()
         except Exception as msg:
             logger.info(msg)
-            print("There was an error!")
+            print(msg)
             pass
 
     def gatherCurrentAdmin(self, msfclient, sessionInput):
+        EventUtils.settingEvent(self, "Gathering current admin on session " + sessionInput + ".")
         try:
             admin = msfclient.client.sessions.session(sessionInput).run_psh_cmd("net sessions")
             session = Session.objects(_id=sessionInput).first()
@@ -57,8 +61,10 @@ class Reconnaissance():
                     session.recon_id.append(recon.session_id)
                     for lines in admin.splitlines():
                         if not 'Access is denied.' in lines:
+                            EventUtils.settingEvent(self, "Session "+sessionInput+" is admin.")
                             recon.isAdmin = True
                         else:
+                            EventUtils.settingEvent(self, "Session "+sessionInput+" is not admin.")
                             recon.isAdmin = False
             recon.save()
             session.save()
@@ -68,6 +74,7 @@ class Reconnaissance():
             pass
 
     def gatherWhoAmI(self, msfclient, sessionInput):
+        EventUtils.settingEvent(self, "Gathering whoami data from session " + sessionInput +".")
         try:
             whoami_input = []
             whoami = msfclient.client.sessions.session(sessionInput).run_psh_cmd("whoami")
@@ -89,12 +96,14 @@ class Reconnaissance():
                             recon.whoami = lines
             recon.save()
             session.save()
+            EventUtils.settingEvent(self, "whoami data for session " +sessionInput+ ": " +recon.whoami+".")
         except Exception as msg:
             logger.info(msg)
             print("There was an error!")
             pass
     
     def gatherPWD(self, msfclient, sessionInput):
+        EventUtils.settingEvent(self, "Gathering pwd from session " + sessionInput + ".")
         try:
             current_pwd = msfclient.client.sessions.session(sessionInput).run_with_output('pwd')
             session = Session.objects(_id=sessionInput).first()
@@ -125,6 +134,7 @@ class Reconnaissance():
             pass
     
     def gatherFiles(self, msfclient, sessionInput):
+        EventUtils.settingEvent(self, "Gathering file info from session " + sessionInput + ".")
         try:
             desc_files = ['Mode', 'Size', 'Type', 'Last', 'Modified', 'TimeZone', 'Name']
             listofFiles = msfclient.client.sessions.session(sessionInput).run_with_output('ls').splitlines()
@@ -173,6 +183,7 @@ class Reconnaissance():
             pass
     
     def gatherInstalledPrograms(self, msfclient, sessionInput):
+        EventUtils.settingEvent(self, "Gathering installed program info from session " + sessionInput +".")
         program_desc = ['Name', 'Version']
         current_programs = []
         session = Session.objects(_id=sessionInput).first()
@@ -188,6 +199,8 @@ class Reconnaissance():
                  recon._id = sessionInput
                  recon.session_id = sessionInput
                  session.recon_id.append(recon.session_id)
+            if recon.installedprg is None:
+                 reconprg = ReconPrograms()
                  for p in listofPrograms:
                     program = self.parseProgramList(p)
                     if not program:
@@ -212,6 +225,7 @@ class Reconnaissance():
         session.save()
     
     def gatherPID(self, msfclient, sessionInput):
+        EventUtils.settingEvent(self, "Gathering list of PID from session " + sessionInput + ".")
         pid_list = []
         desc_pid = ['PID', 'Name']
         run_ps = msfclient.client.sessions.session(sessionInput).run_with_output('ps')
@@ -236,6 +250,7 @@ class Reconnaissance():
         return pid_list
 
     def gatherDomain(self, msfclient, sessionInput):
+        EventUtils.settingEvent(self, "Gathering domain info from session " + sessionInput + ".")
         domain = ""
         user_list = {'User': 'user', 'IP': '0.0.0.0'}
         domain_user = []
@@ -327,20 +342,64 @@ class Reconnaissance():
             return file
     
     def parseIPData(self, recon, ip):
+        adapter_list = []
         for lines in ip.splitlines():
+            if 'Description' in lines:
+                found_adapter = lines.split(":",1)[1]
+                if recon.network_adapters:
+                    for network_adapters in recon.network_adapters:
+                        adapter_list.append(network_adapters.adapter)
+                    if found_adapter in adapter_list:
+                        _adapter = None
+                        pass
+                    else:
+                        _adapter = ReconNetwork()
+                        _adapter.adapter = found_adapter
+                else:
+                    _adapter = ReconNetwork()
+                    _adapter.adapter = found_adapter
             if 'IPv4' in lines:
                 found_ip = re.findall( r'[0-9]+(?:\.[0-9]+){3}',lines)
-                recon.ip_address = found_ip[0]
+                if found_ip:
+                    if _adapter:
+                        if not recon.network_adapters:
+                            _adapter.ip_address = found_ip[0]
+                        else:
+                            for network_adapters in recon.network_adapters:
+                                if network_adapters.ip_address == found_ip:
+                                    break
+                                else:
+                                    _adapter.ip_address = found_ip[0]
+                    else:
+                        break
             if 'Default Gateway' in lines:
-                found_gateway = re.findall( r'[0-9]+(?:\.[0-9]+){3}',lines)
-                recon.defaultgateway = found_gateway[0]
+                found_defaultgateway = re.findall( r'[0-9]+(?:\.[0-9]+){3}',lines)
+                if _adapter == None:
+                    pass
+                if found_defaultgateway:
+                    _adapter.defaultgateway = found_defaultgateway[0]
             if 'DNS Servers' in lines:
                 found_dns =  re.findall( r'[0-9]+(?:\.[0-9]+){3}',lines)
-                recon.dns = found_dns[0]
+                if _adapter == None:
+                    pass
+                if found_dns:
+                    _adapter.dns = found_dns[0]
             if 'DHCP Server' in lines:
                 found_dhcp = re.findall( r'[0-9]+(?:\.[0-9]+){3}',lines)
+                if _adapter == None:
+                    pass
+                if found_dhcp:
+                    pass
             if 'Subnet Mask' in lines:
                 found_subnet_mask = re.findall( r'[0-9]+(?:\.[0-9]+){3}',lines)
+                if _adapter == None:
+                    pass
+                if found_subnet_mask:
+                    pass
+            if 'NetBIOS over Tcpip' in lines:
+                if _adapter == None:
+                    pass
+                recon.network_adapters.append(_adapter)
     
     def checkingFileChanges(self, file, _dict):
         i = 0

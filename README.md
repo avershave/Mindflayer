@@ -1,7 +1,7 @@
-# sploitStreet
-## Goals with sploitStreet
-- Automation with Metasploit
-	- sploitStreet will be able to learn from the infromation it gathers. With the information, it will be able to decide on what the next move it should do. Not every move will be to actually accomplish an exploit. It will try to confuse the user randomly.
+# Mindflayer
+## Goals with Mindflayer
+- Automation with Mindflayer
+	- Mindflyer will be able to learn from the infromation it gathers. With the information, it will be able to decide on what the next move it should do. Not every move will be to actually accomplish an exploit. It will try to confuse the user randomly.
 
 ## Accomplished so far:
 1. Built framework for user input
@@ -9,6 +9,8 @@
 	- Currently working with transport within meterpreter
 2. Started creating automation
 3. Able to parse data using JSON
+4. Uses Mongodb to store session, recon data
+5. Developed a frontend to display my data and events from Mindflayer
 
 ## TODOS:
-Really want a backend to view the commands the program is sending. First idea was using MongoDB because of how it interacts with dictionaries natively.
+Create a scenario to test Mindflayer's automation.

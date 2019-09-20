@@ -16,7 +16,7 @@ $(document).ready(function(){
     });
 
     socket.on('new session', function(session){
-        console.log("Added sessions")
+        //console.log("Added sessions")
         $('#containerSessions').append('<div class="row" id="rowsession'+session._id+'"></div>')
         $("#rowsession"+session._id).append( '<p><a class="btn btn-success btn-md m-1" data-toggle="collapse" href="#session'+session._id+'" role="button" aria-expanded="false" aria-controls="'+session._id+'">Session: '+session._id+'</a></p>')
         $("#rowsession"+session._id).append('<div class="collapse" id="session'+session._id+'"></div>')
@@ -27,9 +27,13 @@ $(document).ready(function(){
     });
     
     socket.on('new event', function(event){
-        console.log("Added event")
+        //console.log("Added event")
         $('#eventList').append('<li class="list-group-item">'+event+'</li>');
         $('#eventList').animate({ scrollTop: $('#eventList')[0].scrollHeight}, 300);
+    });
+
+    socket.on('new recon', function(recon){
+
     });
 });
 </script>
@@ -64,7 +68,32 @@ $(document).ready(function(){
                                 <div class="collapse" id="recon{{ r.session_id }}">
                                     <div class="card card-body" style="height: 250px; overflow-y: scroll" id='reconinfo{{ r.session_id }}'>
                                         {% for key, value in r.items() %}
-                                            <p>{{key}}: {{value}}</p>
+                                            {% if value is iterable and value is not string %}
+                                                <p>{{key}}: 
+                                                <ul class="list-group">
+                                                {% for list in value %}
+                                                    {% if list is iterable and list is not string %}
+                                                        {% for listkey, listvalue in list.items() %}
+                                                            {% if listvalue is iterable and listvalue is not string %}
+                                                                <li class="list-group-item">{{listkey}}:
+                                                                <ul class="list-group">
+                                                                {% for fileslist in listvalue %}
+                                                                    {% for keyfiles, valuefiles in fileslist.items() %}
+                                                                        <li class="list-group-item">{{keyfiles}}: {{valuefiles}}</li>
+                                                                    {% endfor %}
+                                                                {% endfor %}
+                                                                </ul>
+                                                            {% else %}
+                                                                <li class="list-group-item">{{listkey}}: {{listvalue}}
+                                                            {% endif %}
+                                                            </li>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                <p>{{key}}: {{value}}</p>
+                                            {% endif %}
                                         {% endfor %}
                                     </div>
                                 </div>
@@ -94,7 +123,7 @@ $(document).ready(function(){
                                 <div class="collapse" id="recon{{ r.session_id }}">
                                     <div class="card card-body" style="height: 250px; overflow-y: scroll" id='reconinfo{{ r.session_id }}'>
                                         {% for key, value in r.items() %}
-                                            <p>{{key}}: {{value}}</p>
+                                          <p>{{key}}: {{value}}</p> 
                                         {% endfor %}
                                     </div>
                                 </div>

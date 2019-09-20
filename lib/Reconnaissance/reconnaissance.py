@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from data.recon import Recon
 from data.recon import ReconFiles
-from data.recon import ReconPrograms
 from data.recon import ReconDomain
 from data.recon import ReconNetwork
 from data.session import Session
@@ -141,6 +140,9 @@ class Reconnaissance():
             session = Session.objects(_id=sessionInput).first()
             if session:
                 recon = Recon.objects(_id=sessionInput).first()
+                if not recon:
+                    Reconnaissance.gatherPWD(self, msfclient, sessionInput)
+                    recon = Recon.objects(_id=sessionInput).first()
                 directory = Recon.objects().filter(directory__dir_name=recon.pwd)
                 if directory:
                     for r in directory:
@@ -179,7 +181,7 @@ class Reconnaissance():
                             r.save()
         except Exception as msg:
             logger.info(msg)
-            print("There was an error!")
+            print(msg)
             pass
     
     def gatherInstalledPrograms(self, msfclient, sessionInput):
@@ -195,32 +197,26 @@ class Reconnaissance():
             recon = Recon.objects(_id=sessionInput).first()
             if recon is None:
                  recon = Recon()
-                 reconprg = ReconPrograms()
                  recon._id = sessionInput
                  recon.session_id = sessionInput
                  session.recon_id.append(recon.session_id)
-            if recon.installedprg is None:
-                 reconprg = ReconPrograms()
-                 for p in listofPrograms:
-                    program = self.parseProgramList(p)
-                    if not program:
-                        pass
-                    else:
-                        programs_mapped = dict(zip(program_desc, program))
-                        reconprg.installedprograms.append(programs_mapped)
-                        reconprg.gathered = True
-                        recon.installedprg = reconprg
-            elif recon.installedprg.gathered:
-                for d in recon.installedprg.installedprograms:
-                    current_programs.append(d['Name'])
+            else:
                 for p in listofPrograms:
                     program = self.parseProgramList(p)
                     if not program:
                         pass
                     else:
-                        if program[0] not in current_programs:
-                            programs_mapped = dict(zip(program_desc, program))
-                            recon.installedprg.installedprograms.append(programs_mapped)
+                        programs_mapped = dict(zip(program_desc, program))
+                        if not recon.gathered_programs:
+                            recon.installedprg.append(programs_mapped)
+                        else:
+                            for list in recon.installedprg:
+                                for key, value in list.items():
+                                    if key in programs_mapped:
+                                        pass
+                                    else:
+                                        recon.installedprg.append(programs_mapped)
+            recon.gathered_programs = True
         recon.save()
         session.save()
     
@@ -332,7 +328,7 @@ class Reconnaissance():
             pass
         elif 'Listing' in f:
             pass
-        elif '=====================================' in file[0]:
+        elif '===================================' in file[0]:
             pass
         elif '----' in f:
             pass

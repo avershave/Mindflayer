@@ -6,7 +6,6 @@ from flask_pymongo import PyMongo
 from flask_bootstrap import Bootstrap
 from flask_socketio import SocketIO, send, emit
 
-
 app = Flask(__name__)
 app.config["MONGO_URI"] = "mongodb://localhost:27017/mindflayer"
 app.config["SECRET_KEY"] = 'mysecret'
@@ -35,6 +34,15 @@ def event_emit():
             socketio.emit('new event', change['fullDocument']['calledEvent'])
             resume_token = stream.resume_token
 
+def recon_emit():
+    resume_token = None
+    pipeline = [{'$match': {'operationType': 'insert'}}]
+    with mongo.db.Reconnaissance.watch(pipeline) as stream:
+        for change in stream:
+            # print(change['fullDocument']['calledEvent'])
+            socketio.emit('new recon', change['fullDocument']['calledEvent'])
+            resume_token = stream.resume_token
+
 @socketio.on('message')
 def handleMessage(msg):
     print('Message: ' + msg)
@@ -48,6 +56,7 @@ def home_page():
 
 eventlet.spawn(session_emit)
 eventlet.spawn(event_emit)
+eventlet.spawn(recon_emit)
 
 if __name__ == '__main__':
     socketio.run(app, port=7000, debug=True)

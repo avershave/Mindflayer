@@ -20,13 +20,6 @@ class ReconFiles(mongoengine.EmbeddedDocument):
     files = mongoengine.ListField()
     gathered = mongoengine.BooleanField(default=False)
 
-class ReconPrograms(mongoengine.EmbeddedDocument):
-    '''
-    Tracks programs installed on the current sessions
-    '''
-    installedprograms = mongoengine.ListField()
-    gathered = mongoengine.BooleanField(default=False)
-
 class ReconNetwork(mongoengine.EmbeddedDocument):
     '''
     Tracks network adapters and their properties
@@ -47,12 +40,14 @@ class Recon(mongoengine.Document):
     isAdmin = mongoengine.BooleanField()
     whoIsAdmin = mongoengine.ListField()
     pwd = mongoengine.StringField()
+    installedprg = mongoengine.ListField()
 
-
-    installedprg = mongoengine.EmbeddedDocumentField(ReconPrograms)
+    
     directory = mongoengine.EmbeddedDocumentListField(ReconFiles)
     domain = mongoengine.EmbeddedDocumentField(ReconDomain)
     network_adapters = mongoengine.ListField(mongoengine.EmbeddedDocumentField(ReconNetwork))
+
+    gathered_programs = mongoengine.BooleanField(default=False)
 
     meta = {
         'db_alias': 'core',

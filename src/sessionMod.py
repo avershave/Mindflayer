@@ -108,12 +108,12 @@ class sessionMod:
                 if selection == 5:
                     session_input = input("Please select a session: ")
                     recon = Reconnaissance()
-                    recon.gatherNetwork(self.msfclient, session_input)
+                    # recon.gatherNetwork(self.msfclient, session_input)
                     # recon.gatherCurrentAdmin(self.msfclient, session_input)
                     # recon.gatherWhoAmI(self.msfclient, session_input)
                     # recon.gatherPWD(self.msfclient, session_input)
-                    # recon.gatherFiles(self.msfclient, session_input)
-                    # recon.gatherInstalledPrograms(self.msfclient, session_input)
+                    recon.gatherFiles(self.msfclient, session_input)
+                    recon.gatherInstalledPrograms(self.msfclient, session_input)
                     # recon.gatherPID(self.msfclient, session_input)
                     # recon.gatherDomain(self.msfclient, session_input)
                 if selection == 6:

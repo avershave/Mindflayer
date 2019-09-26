@@ -5,6 +5,7 @@ from data.recon import ReconDomain
 from data.recon import ReconNetwork
 from data.session import Session
 from data.event import Event, EventUtils
+from pymetasploit3.msfrpc import MsfError
 import re
 import time
 from src.masterLogger import masterLogger
@@ -22,7 +23,7 @@ class Reconnaissance():
         EventUtils.settingEvent(self, "Gathering network info on session " + sessionInput + ".")
         try:
             session = Session.objects(_id=sessionInput).first()
-            ip = msfclient.client.sessions.session(sessionInput).run_psh_cmd("ipconfig /all")
+            ip = msfclient.client.sessions.session(sessionInput).run_psh_cmd("ipconfig /all", timeout=30)
             if session:
                 recon = Recon.objects(session_id=sessionInput).first()
                 if recon:
@@ -35,15 +36,17 @@ class Reconnaissance():
                     self.parseIPData(recon, ip)
             recon.save()
             session.save()
-        except Exception as msg:
-            logger.info(msg)
-            print(msg)
+        except MsfError:
+            print(f"[!]Session {sessionInput} threw timeout error.")
+            print("[!]Killing session...")
+            msfclient.client.consoles.console(msfclient.console).write(f'sessions -k {sessionInput}')
+            time.sleep(10)
             pass
 
     def gatherCurrentAdmin(self, msfclient, sessionInput):
         EventUtils.settingEvent(self, "Gathering current admin on session " + sessionInput + ".")
         try:
-            admin = msfclient.client.sessions.session(sessionInput).run_psh_cmd("net sessions")
+            admin = msfclient.client.sessions.session(sessionInput).run_psh_cmd("net sessions", timeout=30)
             session = Session.objects(_id=sessionInput).first()
             if session:
                 recon = Recon.objects(session_id=sessionInput).first()
@@ -67,16 +70,18 @@ class Reconnaissance():
                             recon.isAdmin = False
             recon.save()
             session.save()
-        except Exception as msg:
-            logger.info(msg)
-            print("There was an error!")
+        except MsfError:
+            print(f"[!]Session {sessionInput} threw timeout error.")
+            print("[!]Killing session...")
+            msfclient.client.consoles.console(msfclient.console).write(f'sessions -k {sessionInput}')
+            time.sleep(10)
             pass
 
     def gatherWhoAmI(self, msfclient, sessionInput):
         EventUtils.settingEvent(self, "Gathering whoami data from session " + sessionInput +".")
         try:
             whoami_input = []
-            whoami = msfclient.client.sessions.session(sessionInput).run_psh_cmd("whoami")
+            whoami = msfclient.client.sessions.session(sessionInput).run_psh_cmd("whoami", timeout=30)
             session = Session.objects(_id=sessionInput).first()
             if session:
                 recon = Recon.objects(session_id=sessionInput).first()
@@ -96,6 +101,12 @@ class Reconnaissance():
             recon.save()
             session.save()
             EventUtils.settingEvent(self, "whoami data for session " +sessionInput+ ": " +recon.whoami+".")
+        except MsfError:
+            print(f"[!]Session {sessionInput} threw timeout error.")
+            print("[!]Killing session...")
+            msfclient.client.consoles.console(msfclient.console).write(f'sessions -k {sessionInput}')
+            time.sleep(10)
+            pass
         except Exception as msg:
             logger.info(msg)
             print("There was an error!")
@@ -104,7 +115,7 @@ class Reconnaissance():
     def gatherPWD(self, msfclient, sessionInput):
         EventUtils.settingEvent(self, "Gathering pwd from session " + sessionInput + ".")
         try:
-            current_pwd = msfclient.client.sessions.session(sessionInput).run_with_output('pwd')
+            current_pwd = msfclient.client.sessions.session(sessionInput).run_with_output('pwd', timeout=30)
             session = Session.objects(_id=sessionInput).first()
             if session:
                 recon = Recon.objects(session_id=sessionInput).first()
@@ -127,6 +138,12 @@ class Reconnaissance():
                     recon.directory.append(reconfiles)
             recon.save()
             session.save()
+        except MsfError:
+            print(f"[!]Session {sessionInput} threw timeout error.")
+            print("[!]Killing session...")
+            msfclient.client.consoles.console(msfclient.console).write(f'sessions -k {sessionInput}')
+            time.sleep(10)
+            pass
         except Exception as msg:
             logger.info(msg)
             print("There was an error!")
@@ -136,7 +153,7 @@ class Reconnaissance():
         EventUtils.settingEvent(self, "Gathering file info from session " + sessionInput + ".")
         try:
             desc_files = ['Mode', 'Size', 'Type', 'Last', 'Modified', 'TimeZone', 'Name']
-            listofFiles = msfclient.client.sessions.session(sessionInput).run_with_output('ls').splitlines()
+            listofFiles = msfclient.client.sessions.session(sessionInput).run_with_output('ls', timeout=30).splitlines()
             session = Session.objects(_id=sessionInput).first()
             if session:
                 recon = Recon.objects(_id=sessionInput).first()
@@ -179,114 +196,151 @@ class Reconnaissance():
                                             d.files.append(files_mapped)
 
                             r.save()
+        except MsfError:
+            print(f"[!]Session {sessionInput} threw timeout error.")
+            print("[!]Killing session...")
+            msfclient.client.consoles.console(msfclient.console).write(f'sessions -k {sessionInput}')
+            time.sleep(10)
+            pass
         except Exception as msg:
             logger.info(msg)
             print(msg)
             pass
     
     def gatherInstalledPrograms(self, msfclient, sessionInput):
-        EventUtils.settingEvent(self, "Gathering installed program info from session " + sessionInput +".")
-        program_desc = ['Name', 'Version']
-        current_programs = []
-        session = Session.objects(_id=sessionInput).first()
-        msfclient.client.sessions.session(sessionInput).write('run post/windows/gather/enum_applications', )
-        time.sleep(10)
-        run_post = msfclient.client.sessions.session(sessionInput).read()
-        listofPrograms = run_post.splitlines()
-        if session:
-            recon = Recon.objects(_id=sessionInput).first()
-            if recon is None:
-                 recon = Recon()
-                 recon._id = sessionInput
-                 recon.session_id = sessionInput
-                 session.recon_id.append(recon.session_id)
-            else:
-                for p in listofPrograms:
-                    program = self.parseProgramList(p)
-                    if not program:
-                        pass
-                    else:
-                        programs_mapped = dict(zip(program_desc, program))
-                        if not recon.gathered_programs:
-                            recon.installedprg.append(programs_mapped)
+        try:
+            EventUtils.settingEvent(self, "Gathering installed program info from session " + sessionInput +".")
+            program_desc = ['Name', 'Version']
+            current_programs = []
+            session = Session.objects(_id=sessionInput).first()
+            msfclient.client.sessions.session(sessionInput).write('run post/windows/gather/enum_applications')
+            time.sleep(10)
+            run_post = msfclient.client.sessions.session(sessionInput).read()
+            listofPrograms = run_post.splitlines()
+            if session:
+                recon = Recon.objects(_id=sessionInput).first()
+                if recon is None:
+                    recon = Recon()
+                    recon._id = sessionInput
+                    recon.session_id = sessionInput
+                    session.recon_id.append(recon.session_id)
+                else:
+                    for p in listofPrograms:
+                        program = self.parseProgramList(p)
+                        if not program:
+                            pass
                         else:
-                            for list in recon.installedprg:
-                                for key, value in list.items():
-                                    if key in programs_mapped:
-                                        pass
-                                    else:
-                                        recon.installedprg.append(programs_mapped)
-            recon.gathered_programs = True
-        recon.save()
-        session.save()
+                            programs_mapped = dict(zip(program_desc, program))
+                            if not recon.gathered_programs:
+                                recon.installedprg.append(programs_mapped)
+                            else:
+                                for list in recon.installedprg:
+                                    for key, value in list.items():
+                                        if key in programs_mapped:
+                                            pass
+                                        else:
+                                            recon.installedprg.append(programs_mapped)
+                recon.gathered_programs = True
+            recon.save()
+            session.save()
+        except MsfError:
+            print(f"[!]Session {sessionInput} threw timeout error.")
+            print("[!]Killing session...")
+            msfclient.client.consoles.console(msfclient.console).write(f'sessions -k {sessionInput}')
+            time.sleep(10)
+            pass
+        except Exception as msg:
+            logger.info(msg)
+            print(msg)
+            pass
     
     def gatherPID(self, msfclient, sessionInput):
-        EventUtils.settingEvent(self, "Gathering list of PID from session " + sessionInput + ".")
-        pid_list = []
-        desc_pid = ['PID', 'Name']
-        run_ps = msfclient.client.sessions.session(sessionInput).run_with_output('ps')
-        time.sleep(8)
-        listofPID = run_ps.splitlines()
-        for line in listofPID:
-            info = line.split()
-            if not line:
-                pass
-            elif 'PID' in line:
-                pass
-            elif '=' in line:
-                pass
-            elif 'Proces' in line:
-                pass
-            elif '---' in line:
-                pass
-            else:
-                temp_list = [info[0], info[2]]
-                pid_mapped = dict(zip(desc_pid, temp_list))
-                pid_list.append(pid_mapped)
-        return pid_list
-
-    def gatherDomain(self, msfclient, sessionInput):
-        EventUtils.settingEvent(self, "Gathering domain info from session " + sessionInput + ".")
-        domain = ""
-        user_list = {'User': 'user', 'IP': '0.0.0.0'}
-        domain_user = []
-        post = msfclient.client.modules.use('post', 'windows/gather/enum_domain')
-        post['SESSION'] = sessionInput
-        cid = msfclient.console
-        run_enum_domain = msfclient.client.consoles.console(cid).run_module_with_output(post)
-        for line in run_enum_domain.splitlines():
-            if '[-]' in line:
-                print("[-] Issue gathering domain info!")
-            else:
-                if line.find("Domain: ") != -1:
-                    domain = line.split("Domain: ",1)[1]
-                elif line.find("Controller: ") != -1:
-                    domain_user_info = line.split("Controller: ", 1)[1].split()
-                    user_list['User'] = domain_user_info[0].upper()
-                    user_list['IP'] = domain_user_info[2].replace(')', '')
-                else:
-                    print("[-] Issue gathering domain info!")
-        post = msfclient.client.modules.use('post', 'windows/gather/enum_domain_group_users')
-        post['GROUP'] = 'domain admins'
-        post['SESSION'] = sessionInput
-        run_enum_domain_group_users = msfclient.consoles.console(cid).run_module_with_output(post)
-        for line in run_enum_domain_group_users.splitlines():
-            if domain in line:
-                users = line.split('\\')[1]
-                if 'not' in users:
+        try:
+            EventUtils.settingEvent(self, "Gathering list of PID from session " + sessionInput + ".")
+            pid_list = []
+            desc_pid = ['PID', 'Name']
+            run_ps = msfclient.client.sessions.session(sessionInput).run_with_output('ps', timeout=30)
+            time.sleep(8)
+            listofPID = run_ps.splitlines()
+            for line in listofPID:
+                info = line.split()
+                if not line:
+                    pass
+                elif 'PID' in line:
+                    pass
+                elif '=' in line:
+                    pass
+                elif 'Proces' in line:
+                    pass
+                elif '---' in line:
                     pass
                 else:
-                    domain_user.append(users)
-        session = Session.objects(_id=sessionInput).first()
-        if session:
-            recon = Recon.objects(_id=sessionInput).first()
-            if recon is None:
-                recon = Recon()
-                recon_domain = ReconDomain()
-                recon_domain.domain = domain
-                recon_domain.domain_controller = user_list
-                recon_domain.domain_user = domain_user
-        recon.save()
+                    temp_list = [info[0], info[2]]
+                    pid_mapped = dict(zip(desc_pid, temp_list))
+                    pid_list.append(pid_mapped)
+            return pid_list
+        except MsfError:
+            print(f"[!]Session {sessionInput} threw timeout error.")
+            print("[!]Killing session...")
+            msfclient.client.consoles.console(msfclient.console).write(f'sessions -k {sessionInput}')
+            time.sleep(10)
+            pass
+        except Exception as msg:
+            logger.info(msg)
+            print(msg)
+            pass
+
+    def gatherDomain(self, msfclient, sessionInput):
+        try:
+            EventUtils.settingEvent(self, "Gathering domain info from session " + sessionInput + ".")
+            domain = ""
+            user_list = {'User': 'user', 'IP': '0.0.0.0'}
+            domain_user = []
+            post = msfclient.client.modules.use('post', 'windows/gather/enum_domain')
+            post['SESSION'] = sessionInput
+            cid = msfclient.console
+            run_enum_domain = msfclient.client.consoles.console(cid).run_module_with_output(post)
+            for line in run_enum_domain.splitlines():
+                if '[-]' in line:
+                    print("[-] Issue gathering domain info!")
+                else:
+                    if line.find("Domain: ") != -1:
+                        domain = line.split("Domain: ",1)[1]
+                    elif line.find("Controller: ") != -1:
+                        domain_user_info = line.split("Controller: ", 1)[1].split()
+                        user_list['User'] = domain_user_info[0].upper()
+                        user_list['IP'] = domain_user_info[2].replace(')', '')
+                    else:
+                        print("[-] Issue gathering domain info!")
+            post = msfclient.client.modules.use('post', 'windows/gather/enum_domain_group_users')
+            post['GROUP'] = 'domain admins'
+            post['SESSION'] = sessionInput
+            run_enum_domain_group_users = msfclient.consoles.console(cid).run_module_with_output(post)
+            for line in run_enum_domain_group_users.splitlines():
+                if domain in line:
+                    users = line.split('\\')[1]
+                    if 'not' in users:
+                        pass
+                    else:
+                        domain_user.append(users)
+            session = Session.objects(_id=sessionInput).first()
+            if session:
+                recon = Recon.objects(_id=sessionInput).first()
+                if recon is None:
+                    recon = Recon()
+                    recon_domain = ReconDomain()
+                    recon_domain.domain = domain
+                    recon_domain.domain_controller = user_list
+                    recon_domain.domain_user = domain_user
+            recon.save()
+        except MsfError:
+            print(f"[!]Session {sessionInput} threw timeout error.")
+            print("[!]Killing session...")
+            msfclient.client.consoles.console(msfclient.console).write(f'sessions -k {sessionInput}')
+            time.sleep(10)
+            pass
+        except Exception as msg:
+            print(msg)
 
                     
 

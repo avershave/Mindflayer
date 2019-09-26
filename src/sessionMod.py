@@ -16,6 +16,8 @@ from data.data_services import create_session
 from lib.Reconnaissance.reconnaissance import Reconnaissance
 from lib.Confusion.confusion import Confusion
 from lib.PrivilegeEscalation.escalation import Escalation
+from lib.Automation.searchFiles import searchFiles
+from data.event import EventUtils
 from masterLogger import masterLogger
 logger = masterLogger('logs', 'logs/session.log', __name__)
 
@@ -162,53 +164,73 @@ class sessionMod:
         '''
         try:
             g = True
+            sessionList = []
+            sessionsGathered = []
+            infoGathered = False
             while g == True:
                 try:
-                    sessionList = []
-                    self.dumpSession()
-                    dumpedSesssion = self.retrieveSession()
-                    for s_id in dumpedSesssion:
-                        sessionList.append(s_id)
-                    while not sessionList:
-                        print("\n[!]No sessions. Waiting for sessions...\n")
-                        time.sleep(5)
+                    while infoGathered == True:
+                            print("[!]Waiting for new session...")
+                            self.dumpSession()
+                            dumpedSession = self.retrieveSession()
+                            for s_id in dumpedSession:
+                                if not s_id in sessionsGathered:
+                                    EventUtils.settingEvent(self, "Found new session: " + s_id)
+                                    sessionList.append(s_id)
+                                    infoGathered = False
+                            time.sleep(5)
+                    if not sessionList:
                         self.dumpSession()
-                        dumpedSesssion = self.retrieveSession()
-                        for s_id in dumpedSesssion:
+                        dumpedSession = self.retrieveSession()
+                        for s_id in dumpedSession:
                             sessionList.append(s_id)
-                    for avail in sessionList:
-                        print(f"[+]Session {avail} ready!")
-                    selectedSession = random.choice(sessionList)
-                    print(f'[+]Selected session {selectedSession}')
-                    recon = Reconnaissance()
-                    print('Gather is currenty working directory')
-                    recon.gatherPWD(self.msfclient, selectedSession)
-                    time.sleep(5)
-                    print('Gathering files in directory')
-                    recon.gatherFiles(self.msfclient, selectedSession)
-                    time.sleep(5)
-                    print('Gathering session network')
-                    recon.gatherNetwork(self.msfclient, selectedSession)
-                    time.sleep(5)
-                    print('Gathering current user')
-                    recon.gatherWhoAmI(self.msfclient, selectedSession)
-                    time.sleep(5)
-                    print('Gather if user is Admin')
-                    recon.gatherCurrentAdmin(self.msfclient, selectedSession)
-                    time.sleep(5)
-                    print('Gathering installed programs')
-                    recon.gatherInstalledPrograms(self.msfclient, selectedSession)
-                    time.sleep(5)
-                    # check_error = _output.split(" ")
-                    # if check_error[0] == '[-]':
-                    #     print(f"[!]Session {selectedSession} threw timeout error.")
-                    #     print("[!]Killing session...")
-                    #     self.msfclient.client.consoles.console(self.msfclient.console).write(f'sessions -k {selectedSession}')
-                    #     time.sleep(10)
-                    # else:
-                    #     print(_output)
-                    # Confusion.moveIntoProcess(self, self.msfclient, selectedSession)
-                    # time.sleep(15)
+                        while not sessionList:
+                            print("\n[!]No sessions. Waiting for sessions...\n")
+                            time.sleep(5)
+                            self.dumpSession()
+                            dumpedSession = self.retrieveSession()
+                            for s_id in dumpedSession:
+                                sessionList.append(s_id)
+                    else:
+                        for avail in sessionList:
+                            print(f"[+]Session {avail} ready!")
+                            EventUtils.settingEvent(self, "Selected: " + avail)
+                            print(f'[+]Selected session {avail}')
+                            recon = Reconnaissance()
+                            search = searchFiles(self.msfclient)
+                            print('Gather is currenty working directory')
+                            recon.gatherPWD(self.msfclient, avail)
+                            time.sleep(5)
+                            print('Gathering files in directory')
+                            recon.gatherFiles(self.msfclient, avail)
+                            time.sleep(5)
+                            print('Gathering session network')
+                            recon.gatherNetwork(self.msfclient, avail)
+                            time.sleep(5)
+                            print('Gathering current user')
+                            recon.gatherWhoAmI(self.msfclient, avail)
+                            time.sleep(5)
+                            print('Gather if user is Admin')
+                            recon.gatherCurrentAdmin(self.msfclient, avail)
+                            time.sleep(5)
+                            print('Gathering installed programs')
+                            recon.gatherInstalledPrograms(self.msfclient, avail)
+                            time.sleep(5)
+                            print('Checking for files...')
+                            search.searchencrypt(avail)
+                            sessionsGathered.append(avail)
+                            sessionList.remove(avail)
+                            # check_error = _output.split(" ")
+                            # if check_error[0] == '[-]':
+                            #     print(f"[!]Session {selectedSession} threw timeout error.")
+                            #     print("[!]Killing session...")
+                            #     self.msfclient.client.consoles.console(self.msfclient.console).write(f'sessions -k {selectedSession}')
+                            #     time.sleep(10)
+                    if not sessionList:
+                        print("[!]All info gathered! Waiting for new session...")
+                        EventUtils.settingEvent(self, "All info gathered, waiting for new session.")
+                        infoGathered = True
+                        pass
                 except KeyboardInterrupt:
                     exit = input("[+]Would you like to exit y/n: ").upper()
                     if exit == 'Y':
@@ -216,9 +238,9 @@ class sessionMod:
                     elif exit == 'N':
                         return True
                 except MsfError:
-                    print(f"[!]Session {selectedSession} threw timeout error.")
+                    print(f"[!]Session {avail} threw timeout error.")
                     print("[!]Killing session...")
-                    self.msfclient.client.consoles.console(self.msfclient.console).write(f'sessions -k {selectedSession}')
+                    self.msfclient.client.consoles.console(self.msfclient.console).write(f'sessions -k {avail}')
                     time.sleep(10)
                     continue
         except Exception as msg:

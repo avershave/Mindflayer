@@ -77,16 +77,16 @@ class pyRon:
             automation = input("[!]Start automation or manual y/n: ").upper()
             if automation == 'Y':
                 logger.info("Started Automation")
-                self.msfclient = connectMsfRpcClient('msf', 'password', '55553', '127.0.0.1', 'False')
+                self.msfclient = connectMsfRpcClient('msf', 'pass', '55553', '127.0.0.1', 'False')
                 msfAutomation(self.msfclient)
-                self.Exit()
+                self.mainMenu()
             if automation == 'N':
                 logger.info("Starting client setup")
                 msfrpcdHandler()
                 useDefaults = input("[DEFAULTS] Would you like to use the all defaults? y/n: ").upper()
                 if useDefaults == 'Y':
                     self.username = 'msf'
-                    self.password = 'password'
+                    self.password = 'pass'
                     self.port = 55553
                     self.host = "127.0.0.1"
                     self.ssl = False
@@ -126,16 +126,17 @@ class pyRon:
             sys.exit()
 
         # Objects
-        logger.info("Connecting to client with info")
-        self.msfclient = connectMsfRpcClient(self.username, self.password, self.port, self.host, self.ssl)
+        if automation == 'N':
+            logger.info("Connecting to client with info")
+            self.msfclient = connectMsfRpcClient(self.username, self.password, self.port, self.host, self.ssl)
 
         # Connect to msfrpcd
-        if self.msfclient.connect() is False:
-            logger.info("Client did not connect and program is exiting")
-            sys.exit()
-        self.sessionMod = sessionMod(self.msfclient)
-        logger.info("Entering main menu")
-        self.mainMenu()
+            if self.msfclient.connect() is False:
+                logger.info("Client did not connect and program is exiting")
+                sys.exit()
+            self.sessionMod = sessionMod(self.msfclient)
+            logger.info("Entering main menu")
+            self.mainMenu()
 
     def epMenu(self, *args):
         '''

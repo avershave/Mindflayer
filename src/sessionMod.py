@@ -123,7 +123,9 @@ class sessionMod:
                     # Confusion.changeWallpaper(self, self.msfclient, '2')
                     # Confusion.moveIntoProcess(self, self.msfclient, '1')
                 if selection == 7:
-                    Escalation.getElevated(self, self.msfclient, '1')
+                    session_input = input("Please select a session: ")
+                    recon = Reconnaissance()
+                    recon.gatherPID(self.msfclient, session_input)
                 if selection == 0:
                     return True
             except ValueError:

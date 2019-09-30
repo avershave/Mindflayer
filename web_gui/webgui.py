@@ -39,13 +39,17 @@ def recon_emit():
     pipeline = [{'$match': {'operationType': 'insert'}}]
     with mongo.db.Reconnaissance.watch(pipeline) as stream:
         for change in stream:
-            # print(change['fullDocument']['calledEvent'])
-            socketio.emit('new recon', change['fullDocument']['calledEvent'])
+            # print(change['fullDocument'])
+            socketio.emit('new recon', change['fullDocument'])
             resume_token = stream.resume_token
 
 @socketio.on('message')
 def handleMessage(msg):
     print('Message: ' + msg)
+
+@socketio.on('requestinfo')
+def handleRequestInfo(reconid):
+    print(reconid)
 
 @app.route("/")
 def home_page():

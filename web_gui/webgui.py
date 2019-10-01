@@ -43,13 +43,18 @@ def recon_emit():
             socketio.emit('new recon', change['fullDocument'])
             resume_token = stream.resume_token
 
+def recon_info_emit():
+    resume_token = None
+    pipeline = [{'$match': {'operationType': 'replace'}}]
+    with mongo.db.Reconnaissance.watch(pipeline) as stream:
+        for change in stream:
+            print(change)
+            socketio.emit('recon_change', change['fullDocument'])
+            resume_token = stream.resume_token
+
 @socketio.on('message')
 def handleMessage(msg):
     print('Message: ' + msg)
-
-@socketio.on('requestinfo')
-def handleRequestInfo(reconid):
-    print(reconid)
 
 @app.route("/")
 def home_page():
@@ -61,6 +66,7 @@ def home_page():
 eventlet.spawn(session_emit)
 eventlet.spawn(event_emit)
 eventlet.spawn(recon_emit)
+eventlet.spawn(recon_info_emit)
 
 if __name__ == '__main__':
     socketio.run(app, port=7000, debug=True)

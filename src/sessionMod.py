@@ -17,6 +17,7 @@ from lib.Reconnaissance.reconnaissance import Reconnaissance
 from lib.Confusion.confusion import Confusion
 from lib.PrivilegeEscalation.escalation import Escalation
 from lib.Automation.searchFiles import searchFiles
+from lib.LateralMovement.lateralmovement import LateralMovement
 from data.event import EventUtils
 from masterLogger import masterLogger
 logger = masterLogger('logs', 'logs/session.log', __name__)
@@ -80,6 +81,7 @@ class sessionMod:
         anything afterwards will be mainly testing
         '''
         menuGoing = False
+        latmove = None
         print("\n[!]Entering Session Module")
         while menuGoing == False:
             try:
@@ -123,9 +125,12 @@ class sessionMod:
                     # Confusion.changeWallpaper(self, self.msfclient, '2')
                     # Confusion.moveIntoProcess(self, self.msfclient, '1')
                 if selection == 7:
-                    session_input = input("Please select a session: ")
-                    recon = Reconnaissance()
-                    recon.gatherPID(self.msfclient, session_input)
+                    if latmove == None:
+                        session_input = input("Please select a session: ")
+                        latmove = LateralMovement(self.msfclient, session_input)
+                    latmove.lmove()
+                if selection == 8:
+                    latmove.lmove()
                 if selection == 0:
                     return True
             except ValueError:
@@ -168,6 +173,7 @@ class sessionMod:
             g = True
             sessionList = []
             sessionsGathered = []
+            latmov = None
             infoGathered = False
             while g == True:
                 try:
@@ -180,6 +186,8 @@ class sessionMod:
                                     EventUtils.settingEvent(self, "Found new session: " + s_id)
                                     sessionList.append(s_id)
                                     infoGathered = False
+                            if infoGathered == True:
+                                latmov.lmove()
                             time.sleep(5)
                     if not sessionList:
                         self.dumpSession()
@@ -200,28 +208,32 @@ class sessionMod:
                             print(f'[+]Selected session {avail}')
                             recon = Reconnaissance()
                             search = searchFiles(self.msfclient)
-                            print('Gather is currenty working directory')
-                            recon.gatherPWD(self.msfclient, avail)
-                            time.sleep(5)
-                            print('Gathering files in directory')
-                            recon.gatherFiles(self.msfclient, avail)
-                            time.sleep(5)
-                            print('Gathering session network')
-                            recon.gatherNetwork(self.msfclient, avail)
-                            time.sleep(5)
-                            print('Gathering current user')
-                            recon.gatherWhoAmI(self.msfclient, avail)
-                            time.sleep(5)
+                            # print('Gather is currenty working directory')
+                            # recon.gatherPWD(self.msfclient, avail)
+                            # time.sleep(5)
+                            # print('Gathering files in directory')
+                            # recon.gatherFiles(self.msfclient, avail)
+                            # time.sleep(5)
+                            # print('Gathering session network')
+                            # recon.gatherNetwork(self.msfclient, avail)
+                            # time.sleep(5)
+                            # print('Gathering current user')
+                            # recon.gatherWhoAmI(self.msfclient, avail)
+                            # time.sleep(5)
                             print('Gather if user is Admin')
                             recon.gatherCurrentAdmin(self.msfclient, avail)
                             time.sleep(5)
-                            print('Gathering installed programs')
-                            recon.gatherInstalledPrograms(self.msfclient, avail)
-                            time.sleep(5)
-                            print('Checking for files...')
-                            search.searchencrypt(avail)
+                            # print('Gathering installed programs')
+                            # recon.gatherInstalledPrograms(self.msfclient, avail)
+                            # time.sleep(5)
+                            # print('Checking for files...')
+                            # search.searchencrypt(avail)
                             sessionsGathered.append(avail)
                             sessionList.remove(avail)
+                            if latmov == None:
+                                latmov = LateralMovement(self.msfclient, avail)
+                            latmov.lmove()
+                            time.sleep(4)
                             # check_error = _output.split(" ")
                             # if check_error[0] == '[-]':
                             #     print(f"[!]Session {selectedSession} threw timeout error.")

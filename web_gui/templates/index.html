@@ -8,6 +8,35 @@
   integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
   crossorigin="anonymous"></script>
 <script type="text/javascript">
+
+function reconData(obj, id){
+    for (let [key, value] of Object.entries(obj)) {
+                if (typeof value == 'object'){
+                    $("#reconinfo"+id).append('<ul class="list-group">'+key+': ')
+                    value.forEach(function(dir){
+                         for (let [dirkey, dirvalue] of Object.entries(dir)){
+                             if (typeof dirvalue == 'object'){
+                                 if (Array.isArray(dirvalue)){
+                                    $("#reconinfo"+id).append('<ul class="list-group">'+dirkey+': ')
+                                    dirvalue.forEach(function(file){
+                                        for (let [filekey, filevalue] of Object.entries(file)){
+                                                $("#reconinfo"+id).append('<li class="list-group-item">'+filekey+': '+filevalue+'</li>')
+                                        }
+                                    })
+                                 }
+                                 $("#reconinfo"+id).append('</ul>')
+                             } else{
+                                 $("#reconinfo"+id).append('<p>'+dirkey+': '+dirvalue+'<p>')
+                             }
+                         }
+                    }) 
+                    $("#reconinfo"+id).append('</ul>')
+                } else{
+                    $("#reconinfo"+id).append('<p>'+key+': '+value+'</p>')
+                }                
+            }
+}
+
 $(document).ready(function(){
     var socket = io.connect('http://127.0.0.1:7000/');
 
@@ -19,7 +48,7 @@ $(document).ready(function(){
         //console.log("Added sessions")
         if(!document.getElementById('rowsession'+session._id)){
             $('#containerSessions').append('<div class="row" id="rowsession'+session._id+'"></div>')
-            $("#rowsession"+session._id).append( '<a class="btn btn-success btn-md m-1" data-toggle="collapse" href="#session'+session._id+'" role="button" aria-expanded="false" aria-controls="'+session._id+'">Session: '+session._id+'</a>')
+            $("#rowsession"+session._id).append( '<p> <a class="btn btn-success btn-md m-1" data-toggle="collapse" href="#session'+session._id+'" role="button" aria-expanded="false" aria-controls="'+session._id+'">Session: '+session._id+'</a> </p>')
             $("#rowsession"+session._id).append('<div class="collapse" id="session'+session._id+'"></div>')
             $("#session"+session._id).append('<div class="card card-body" style="height: 250px; overflow-y: scroll" id="info'+session._id+'"></div>')
             for (let [key, value] of Object.entries(session)) {
@@ -39,26 +68,7 @@ $(document).ready(function(){
             $("#rowsession"+recon.session_id).append( '<p id="recon'+recon.session_id+'button"><a class="btn btn-success btn-md m-1" data-toggle="collapse" href="#recon'+recon.session_id+'" role="button" aria-expanded="false" aria-controls="recon'+recon.session_id+'">Recon: '+recon.session_id+'</a></p>')
             $("#rowsession"+recon.session_id).append('<div class="collapse" id="recon'+recon.session_id+'"></div>')
             $("#recon"+recon.session_id).append('<div class="card card-body" style="height: 250px; overflow-y: scroll" id="reconinfo'+recon.session_id+'"></div>')
-            for (let [key, value] of Object.entries(recon)) {
-                if (typeof value == 'object'){
-                    $("#reconinfo"+recon.session_id).append('<p>'+key+': </p>')
-                    value.forEach(function(dir){
-                        console.log(dir)
-                         for (let [dirkey, dirvalue] of Object.entries(dir)){
-                             if (typeof dirvalue == 'object'){
-                                 dirvalue.forEach(function(file){
-                                     for (let [filekey, filevalue] of Object.entries(file)){
-                                         $("#reconinfo"+recon.session_id).append('<p>'+filekey+': '+filevalue+'</p>')
-                                     }
-                                 })
-                             }
-                             $("#reconinfo"+recon.session_id).append('<p>'+dirkey+': '+dirvalue+'</p>')
-                         }
-                    }) 
-                } else{
-                    $("#reconinfo"+recon.session_id).append('<p>'+key+': '+value+'</p>')
-                }                
-            }
+            reconData(recon, recon.session_id)
         }
     });
 
@@ -68,26 +78,7 @@ $(document).ready(function(){
         $("#rowsession"+info.session_id).append( '<p id="recon'+info.session_id+'button"><a class="btn btn-success btn-md m-1" data-toggle="collapse" href="#recon'+info.session_id+'" role="button" aria-expanded="false" aria-controls="recon'+info.session_id+'">Recon: '+info.session_id+'</a></p>')
         $("#rowsession"+info.session_id).append('<div class="collapse" id="recon'+info.session_id+'"></div>')
         $("#recon"+info.session_id).append('<div class="card card-body" style="height: 250px; overflow-y: scroll" id="reconinfo'+info.session_id+'"></div>')
-            for (let [key, value] of Object.entries(info)) {
-                if (typeof value == 'object'){
-                    $("#reconinfo"+info.session_id).append('<p>'+key+': </p>')
-                    value.forEach(function(dir){
-                        console.log(dir)
-                         for (let [dirkey, dirvalue] of Object.entries(dir)){
-                             if (typeof dirvalue == 'object'){
-                                 dirvalue.forEach(function(file){
-                                     for (let [filekey, filevalue] of Object.entries(file)){
-                                         $("#reconinfo"+info.session_id).append('<p>'+filekey+': '+filevalue+'</p>')
-                                     }
-                                 })
-                             }
-                             $("#reconinfo"+info.session_id).append('<p>'+dirkey+': '+dirvalue+'</p>')
-                         }
-                    }) 
-                } else{
-                    $("#reconinfo"+info.session_id).append('<p>'+key+': '+value+'</p>')
-                }                
-            }
+        reconData(info, info.session_id)
     });
     
 });
